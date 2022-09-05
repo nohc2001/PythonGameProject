@@ -26,6 +26,9 @@ addx = 0
 global game_manager
 game_manager = GameManager()
 
+global MainCamera
+MainCamera = Camera(vec2(0, 0), 800, 600, vec2(0, 0), 0.95, vec2(800, 600))
+
 global saveClock
 global presentClock
 saveClock = 0
@@ -50,7 +53,7 @@ def main():
 
         clear_canvas()
 
-        game_manager.Render(NULL)
+        game_manager.Render(MainCamera)
 
         update_canvas()
 
