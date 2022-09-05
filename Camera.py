@@ -18,11 +18,11 @@ class Camera:
     
     def Update(self, deltaTime):
         result = self.destpos * (1-self.powrate) + self.center * self.powrate
-        self.center = deltaTime * (result - self.center)
+        self.center += (result - self.center) * deltaTime
 
         result = self.destWH * (1-self.powrate) + vec2(self.Width, self.Height) * self.powrate
-        self.Width = deltaTime * (result.x - self.Width)
-        self.Height = deltaTime * (result.y - self.Height)
+        self.Width += (result.x - self.Width) * deltaTime
+        self.Height += (result.y - self.Height) * deltaTime
 
         self.Rt = rect4(self.center.x-self.Width/2, self.center.y-self.Height/2, self.center.x+self.Width/2, self.center.y+self.Height/2)
         return 0
@@ -38,4 +38,6 @@ class Camera:
         rpos.x = self.screenWH.x * (v2.x - self.Rt.fx) / self.Width
         rpos.y = self.screenWH.y * (v2.y - self.Rt.fy) / self.Height
         return rpos
-    
+
+global MainCamera
+MainCamera = Camera(vec2(0, 0), 800, 600, vec2(0, 0), 0.75, vec2(800, 600))

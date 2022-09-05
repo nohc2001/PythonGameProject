@@ -1,5 +1,6 @@
 from gameObj import *
 from SpaceMath import *
+from Camera import*
 
 class Player(GameObject):
     def __init__(self, location, layer, spr, gm):
@@ -14,6 +15,7 @@ class Player(GameObject):
         self.Speed = 1
     
     def update(self, deltaTime):
+        global MainCamera
         moveDelta = vec2(0, 0)
         if self.AKeyDown:
             moveDelta += vec2(-1, 0)
@@ -25,6 +27,8 @@ class Player(GameObject):
             moveDelta += vec2(0, 1)
         moveDelta = moveDelta * self.Speed
         self.location.Move(moveDelta)
+        camcenter = self.location.getcenter() + moveDelta*100
+        MainCamera.MoveTo(camcenter, vec2(800, 600))
         return 0
     
     def render(self, camera):
