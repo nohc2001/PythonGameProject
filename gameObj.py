@@ -1,14 +1,14 @@
 from pico2d import *
 from SpaceMath import *
 from Camera import *
+
+
 global sprarr
-sprarr = [
-    load_image('tica.png') # 0
-]
+sprarr = []
 
 class Ptr:
     def __init__(self):
-        return 0
+        a = 1
 
 class GameObject:
     def __init__(self, location, layer, spr, gm):
@@ -36,7 +36,7 @@ class GameObject:
         return 0
 
 class GameManager(Ptr):
-    def __init__(self, objPool, isArrange):
+    def __init__(self):
         self.objPool = []
         self.isArrange = False
     
@@ -61,7 +61,7 @@ class GameManager(Ptr):
             obj.update(deltaTime)
     
     def AddObject(self, obj):
-        self.objPool.__add__(obj)
+        self.objPool.append(obj)
         self.isArrange = False
     
     def Render(self, camera):

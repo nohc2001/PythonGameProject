@@ -10,7 +10,6 @@ class Camera:
         self.powrate = powrate
         self.Rt = rect4(self.center.x-self.Width/2, self.center.y-self.Height/2, self.center.x+self.Width/2, self.center.y+self.Height/2)
         self.screenWH = screenWH
-        return 0
     
     def MoveTo(self, destPos, destwh):
         self.destpos = destPos
@@ -29,7 +28,7 @@ class Camera:
         return 0
     
     def bObjInCamera(self, obj):
-        if self.Rt.bRectInRect(obj.location):
+        if self.Rt.bRectTouchRect(obj.location):
             return True
         else:
             return False

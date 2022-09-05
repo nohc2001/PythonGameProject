@@ -1,12 +1,12 @@
-from asyncio.windows_events import NULL
-import os
-from time import clock_gettime
-from pico2d import *
-from time import *
-from gameObj import *
 
-os.chdir('C:\\Users\\nohc2\\Dev\\PythonGame')
+import os
+from pico2d import *
+from gameObj import *
+from Objects.Player import *
+
+os.chdir('C:\\Users\\nohc2\\Dev\\PythonGame\\PythonGameProject')
 pico2d.open_canvas(800, 600)
+sys.path.append(r'C:\\Users\\nohc2\\Dev\\PythonGame\\PythonGameProject')
 
 global isRunning
 isRunning = True
@@ -34,19 +34,32 @@ global presentClock
 saveClock = 0
 presentClock = 0
 
+def init():
+    global sprarr
+    global game_manager
+
+    #sprite init
+    sprarr.append(load_image('tica.png'))
+
+    playerobj = Player(rect4(0, 0, 100, 200), 1, sprarr[0], game_manager)
+    game_manager.AddObject(playerobj)
+    return 0
+
 def main():
+    init()
     global addx
     global isRunning
     global game_manager
     global saveClock
     global presentClock
+    global MainCamera
 
-    saveClock = clock_gettime(time.CLOCK_REALTIME)
+    saveClock = pico2d.get_time()
     while(1):
         if(isRunning == False):
             return 0
         
-        presentClock = clock_gettime(time.CLOCK_REALTIME)
+        presentClock = pico2d.get_time()
         deltaTime = presentClock - saveClock
 
         game_manager.Update(deltaTime)
