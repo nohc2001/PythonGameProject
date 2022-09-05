@@ -1,4 +1,5 @@
 # PythonGameProject
 
 this is python game programming code.
-just run main.py
+It's still under construction and it hasn't been completed
+but if you want to excute code, just run main.py.
