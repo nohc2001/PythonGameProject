@@ -27,8 +27,8 @@ class Player(GameObject):
             moveDelta += vec2(0, 1)
         moveDelta = moveDelta * self.Speed
         self.location.Move(moveDelta)
-        camcenter = self.location.getcenter() + moveDelta*100
-        MainCamera.MoveTo(camcenter, vec2(800, 600))
+        camcenter = self.location.getcenter() + moveDelta*10
+        MainCamera.MoveTo(camcenter, vec2(1600, 1200))
         return 0
     
     def render(self, camera):

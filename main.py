@@ -36,10 +36,13 @@ def init():
     global game_manager
     
     #sprite init
-    sprarr.append(load_image('tica.png'))
+    sprarr.append(load_image('tica.png')) #1
+    sprarr.append(load_image('table_value_2.png')) #2
 
     playerobj = Player(rect4(0, 0, 100, 200), 1, sprarr[0], game_manager)
     game_manager.AddObject(playerobj)
+    box = GameObject(rect4(100, 100, 200, 200), 0, sprarr[1], game_manager)
+    game_manager.AddObject(box)
     return 0
 
 def main():
