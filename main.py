@@ -1,4 +1,5 @@
 
+from multiprocessing import active_children
 import os
 from pico2d import *
 from gameObj import *
@@ -47,7 +48,17 @@ def init():
     
     playerobj = Player(rect4(0, 0, 200, 240), 1, sprarr[2], sprarr[3], game_manager)
     game_manager.AddObject(playerobj)
+    
     box = GameObject(rect4(100, 100, 300, 800), 0, sprarr[4], game_manager)
+    game_manager.AddObject(box)
+
+    box = GameObject(rect4(100, 0, 100, 100), 0, sprarr[5], game_manager)
+    game_manager.AddObject(box)
+
+    box = GameObject(rect4(200, 0, 100, 100), 0, sprarr[6], game_manager)
+    game_manager.AddObject(box)
+
+    box = GameObject(rect4(-100, 0, 100, 100), 0, sprarr[5], game_manager)
     game_manager.AddObject(box)
     return 0
 

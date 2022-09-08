@@ -65,19 +65,21 @@ class Player(GameObject):
             ObjInScreenRt = rect4(fpos.x, fpos.y, lpos.x, lpos.y)
             
             spr = self.walkspr
+            xoffset = 0
             if(self.state == 'walk'):
                 spr = self.walkspr
             elif(self.state == 'idle'):
+                xoffset = self.location.getwid() / 4
                 spr = self.idlespr
 
             if(self.movedir < 0):
                 Wid = spr.w / self.walkMaxFrame
                 Hei = spr.h / 2
-                spr.clip_draw(int(self.presentFrame * Wid), 0, int(Wid), int(Hei), ObjInScreenRt.getcenter().x, ObjInScreenRt.getcenter().y, ObjInScreenRt.getwid(), ObjInScreenRt.gethei())
+                spr.clip_draw(int(self.presentFrame * Wid), 0, int(Wid), int(Hei), ObjInScreenRt.getcenter().x-xoffset, ObjInScreenRt.getcenter().y, ObjInScreenRt.getwid(), ObjInScreenRt.gethei())
             else:
                 Wid = spr.w / self.walkMaxFrame
                 Hei = spr.h / 2
-                spr.clip_draw(int(self.presentFrame * Wid), int(Hei), int(Wid), int(Hei), ObjInScreenRt.getcenter().x, ObjInScreenRt.getcenter().y, ObjInScreenRt.getwid(), ObjInScreenRt.gethei())
+                spr.clip_draw(int(self.presentFrame * Wid), int(Hei), int(Wid), int(Hei), ObjInScreenRt.getcenter().x+xoffset, ObjInScreenRt.getcenter().y, ObjInScreenRt.getwid(), ObjInScreenRt.gethei())
             #self.spr.clip_draw(Wid*self.presentFrame, 0, Wid, Hei , ObjInScreenRt.getcenter().x, ObjInScreenRt.getcenter().y, ObjInScreenRt.getwid(), ObjInScreenRt.gethei())
             #self.spr.draw(ObjInScreenRt.getcenter().x, ObjInScreenRt.getcenter().y, ObjInScreenRt.getwid(), ObjInScreenRt.gethei());
         return 0
