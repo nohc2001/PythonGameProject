@@ -38,10 +38,15 @@ def init():
     #sprite init
     sprarr.append(load_image('tica.png')) #1
     sprarr.append(load_image('table_value_2.png')) #2
+    sprarr.append(load_image('Resorceses/char_walk.png')) #3
+    sprarr.append(load_image('Resorceses/Tree0.png')) #4
+    sprarr.append(load_image('Resorceses/Grass0.png')) #5
+    sprarr.append(load_image('Resorceses/Flower0.png')) #6
 
-    playerobj = Player(rect4(0, 0, 100, 200), 1, sprarr[0], game_manager)
+    
+    playerobj = Player(rect4(0, 0, 200, 240), 1, sprarr[2], game_manager)
     game_manager.AddObject(playerobj)
-    box = GameObject(rect4(100, 100, 200, 200), 0, sprarr[1], game_manager)
+    box = GameObject(rect4(100, 100, 300, 800), 0, sprarr[3], game_manager)
     game_manager.AddObject(box)
     return 0
 
