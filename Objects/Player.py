@@ -3,16 +3,18 @@ from SpaceMath import *
 from Camera import*
 
 class Player(GameObject):
-    def __init__(self, location, layer, spr, gm):
+    def __init__(self, location, layer, walkspr, idlespr, gm):
         self.location = location
         self.layer = layer
-        self.spr = spr
+        self.walkspr = walkspr
+        self.idlespr = idlespr
         self.gm = gm
         self.AKeyDown = False
         self.SKeyDown = False
         self.DKeyDown = False
         self.WKeyDown = False
 
+        self.state = 'idle';
         self.walkMaxFrame = 25
         self.presentFrame = 0
         self.FrameUpdateDelta = vec2(0, 0.03)
@@ -23,6 +25,11 @@ class Player(GameObject):
     
     def update(self, deltaTime):
         #Frame Update
+        if(self.state == 'walk'):
+            self.walkMaxFrame = 25
+        elif(self.state == 'idle'):
+            self.walkMaxFrame = 21
+
         self.FrameUpdateDelta.x += deltaTime
         if(self.FrameUpdateDelta.x > self.FrameUpdateDelta.y):
             self.FrameUpdateDelta.x = 0
@@ -57,14 +64,20 @@ class Player(GameObject):
             lpos = camera.WorldPosToScreenPos(self.location.getlpos())
             ObjInScreenRt = rect4(fpos.x, fpos.y, lpos.x, lpos.y)
             
+            spr = self.walkspr
+            if(self.state == 'walk'):
+                spr = self.walkspr
+            elif(self.state == 'idle'):
+                spr = self.idlespr
+
             if(self.movedir < 0):
-                Wid = self.spr.w / self.walkMaxFrame
-                Hei = self.spr.h / 2
-                self.spr.clip_draw(int(self.presentFrame * Wid), 0, int(Wid), int(Hei), ObjInScreenRt.getcenter().x, ObjInScreenRt.getcenter().y, ObjInScreenRt.getwid(), ObjInScreenRt.gethei())
+                Wid = spr.w / self.walkMaxFrame
+                Hei = spr.h / 2
+                spr.clip_draw(int(self.presentFrame * Wid), 0, int(Wid), int(Hei), ObjInScreenRt.getcenter().x, ObjInScreenRt.getcenter().y, ObjInScreenRt.getwid(), ObjInScreenRt.gethei())
             else:
-                Wid = self.spr.w / self.walkMaxFrame
-                Hei = self.spr.h / 2
-                self.spr.clip_draw(int(self.presentFrame * Wid), int(Hei), int(Wid), int(Hei), ObjInScreenRt.getcenter().x, ObjInScreenRt.getcenter().y, ObjInScreenRt.getwid(), ObjInScreenRt.gethei())
+                Wid = spr.w / self.walkMaxFrame
+                Hei = spr.h / 2
+                spr.clip_draw(int(self.presentFrame * Wid), int(Hei), int(Wid), int(Hei), ObjInScreenRt.getcenter().x, ObjInScreenRt.getcenter().y, ObjInScreenRt.getwid(), ObjInScreenRt.gethei())
             #self.spr.clip_draw(Wid*self.presentFrame, 0, Wid, Hei , ObjInScreenRt.getcenter().x, ObjInScreenRt.getcenter().y, ObjInScreenRt.getwid(), ObjInScreenRt.gethei())
             #self.spr.draw(ObjInScreenRt.getcenter().x, ObjInScreenRt.getcenter().y, ObjInScreenRt.getwid(), ObjInScreenRt.gethei());
         return 0
@@ -72,19 +85,23 @@ class Player(GameObject):
     def event(self, event):
         if(event.type == SDL_KEYDOWN):
             if event.key == SDLK_a:
+                self.state = 'walk'
                 self.AKeyDown = True
             if event.key == SDLK_s:
                 self.SKeyDown = True
             if event.key == SDLK_d:
+                self.state = 'walk'
                 self.DKeyDown = True
             if event.key == SDLK_w:
                 self.WKeyDown = True
         if(event.type == SDL_KEYUP):
             if event.key == SDLK_a:
+                self.state = 'idle'
                 self.AKeyDown = False
             if event.key == SDLK_s:
                 self.SKeyDown = False
             if event.key == SDLK_d:
+                self.state = 'idle'
                 self.DKeyDown = False
             if event.key == SDLK_w:
                 self.WKeyDown = False
