@@ -40,4 +40,7 @@ class Camera:
         return rpos
 
 global MainCamera
-MainCamera = Camera(vec2(0, 0), 1600, 1200, vec2(0, 0), 0.01, vec2(800, 600))
+global WMAX, HMAX
+WMAX = 800;
+HMAX = 600;
+MainCamera = Camera(vec2(0, 0), 2*WMAX, 2*HMAX, vec2(0, 0), 0.01, vec2(WMAX, HMAX))

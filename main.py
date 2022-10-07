@@ -6,7 +6,7 @@ from gameObj import *
 from Objects.Player import *
 
 os.chdir('C:\\Users\\nohc2\\Dev\\PythonGame\\PythonGameProject')
-pico2d.open_canvas(800, 600)
+pico2d.open_canvas(WMAX, HMAX)
 sys.path.append(r'C:\\Users\\nohc2\\Dev\\PythonGame\\PythonGameProject')
 
 global isRunning
@@ -32,9 +32,13 @@ global presentClock
 saveClock = 0
 presentClock = 0
 
+global bgm;
+bgm = 0;
+
 def init():
     global sprarr
     global game_manager
+    global bgm
     
     #sprite init
     sprarr.append(load_image('tica.png')) #0
@@ -45,6 +49,9 @@ def init():
     sprarr.append(load_image('Resorceses/Grass0.png')) #5
     sprarr.append(load_image('Resorceses/Flower0.png')) #6
 
+    bgm = load_music('Resorceses\Sound\EnterToMagica0.mp3');
+    bgm.set_volume(128);
+    
     
     playerobj = Player(rect4(0, 0, 200, 240), 1, sprarr[2], sprarr[3], game_manager)
     game_manager.AddObject(playerobj)
@@ -60,6 +67,8 @@ def init():
 
     box = GameObject(rect4(-100, 0, 100, 100), 0, sprarr[5], game_manager)
     game_manager.AddObject(box)
+
+    bgm.repeat_play();
     return 0
 
 def main():
@@ -71,6 +80,7 @@ def main():
     global presentClock
     global MainCamera
 
+    print("black");
     saveClock = pico2d.get_time()
     while(1):
         if(isRunning == False):

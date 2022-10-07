@@ -1,0 +1,48 @@
+충돌처리
+1. 충돌만 감지하는 것
+2. 충돌이 되지 않게 방지하는 것.
+
+bool bPointInRectRange(int x, int y, rt4 rt) {
+	if ((rt.fx <= x && x <= rt.lx) &&
+		(rt.fy <= y && y <= rt.ly)) {
+		return true;
+	}
+	else return false;
+}
+
+bool bRectinRect(shp::rect4f rt1, shp::rect4f rt2) {
+	if (((rt1.fx <= rt2.fx && rt2.fx <= rt1.lx) || (rt1.fx <= rt2.lx && rt2.lx <= rt1.lx))
+		&& ((rt1.fy <= rt2.fy && rt2.fy <= rt1.ly) || (rt1.fy <= rt2.ly && rt2.ly <= rt1.ly))) {
+		return true;
+	}
+	
+	return false;
+}
+
+bool bRectInRectRange(rt4 rt1, rt4 rt2) {
+	if (bPointInRectRange(rt2.fx, rt2.fy, rt1)) {
+		return true;
+	}
+
+	if (bPointInRectRange(rt2.fx, rt2.ly, rt1)) {
+		return true;
+	}
+
+	if (bPointInRectRange(rt2.lx, rt2.fy, rt1)) {
+		return true;
+	}
+
+	if (bPointInRectRange(rt2.lx, rt2.ly, rt1)) {
+		return true;
+	}
+
+	if (
+		(((rt1.fx < rt2.fx && rt2.fx < rt1.lx) && (rt1.fx < rt2.lx && rt2.lx < rt1.lx)) 
+			&& ((rt2.fy < rt1.fy && rt1.fy < rt2.ly) && (rt2.fy < rt1.ly && rt1.ly < rt2.ly))) ||
+		(((rt2.fx < rt1.fx && rt1.fx < rt2.lx) && (rt2.fx < rt1.lx && rt1.lx < rt2.lx))
+			&& ((rt1.fy < rt2.fy && rt2.fy < rt1.ly) && (rt1.fy < rt2.ly && rt2.ly < rt1.ly)))) {
+		return true;
+	}
+
+	return false;
+}

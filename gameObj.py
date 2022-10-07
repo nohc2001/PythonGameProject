@@ -41,21 +41,18 @@ class GameManager(Ptr):
         self.isArrange = False
     
     def Update(self, deltaTime):
-        if self.isArrange == False:
-            #arrange by layer
-            poolLen = len(self.objPool)
-            i=0
-            while(i < poolLen):
-                k = i+1
-                while(k < poolLen):
-                    if self.objPool[i].layer > self.objPool[k].layer:
-                        insobj = self.objPool[i]
-                        self.objPool[i] = self.objPool[k]
-                        self.objPool[k] = insobj
-                    k += 1
-                i += 1
-
-            self.isArrange = True
+        poolLen = len(self.objPool)
+        i=0
+        while(i < poolLen):
+            self.objPool[i].layer = self.objPool[i].location.fy;
+            k = i+1
+            while(k < poolLen):
+                if self.objPool[i].layer < self.objPool[k].layer:
+                    insobj = self.objPool[i]
+                    self.objPool[i] = self.objPool[k]
+                    self.objPool[k] = insobj
+                k += 1
+            i += 1
         
         for obj in self.objPool:
             obj.update(deltaTime)

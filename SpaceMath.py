@@ -1,4 +1,5 @@
 from ast import operator
+import math
 
 class vec2:
     def __init__(self, x, y):
@@ -34,6 +35,19 @@ class vec2:
             v2.x = 0
             v2.y = 0
             return v2
+
+class straightLine:
+    def __init__(self, pos0, pos1) -> None:
+        self.xrate = pos1.x - pos0.x;
+        self.yrate = pos1.y - pos0.y;
+        self.inDot = vec2(pos0.x, pos0.y);
+        pass
+
+    def GetYFromX(self, x):
+        return self.yrate * (x - self.inDot.x) / self.xrate + self.inDot.y;
+    
+    def GetXFromY(self, y):
+        return self.xrate * (y - self.inDot.y) / self.yrate + self.inDot.x;
 
 class rect4:
     def __init__(self, fx, fy, lx, ly):
@@ -80,3 +94,6 @@ class rect4:
         self.lx += v2.x
         self.fy += v2.y
         self.ly += v2.y
+
+def get_distance(pos0, pos1):
+    return math.sqrt(math.pow(pos1.x - pos0.x, 2) + math.pow(pos1.y - pos0.y, 2));
