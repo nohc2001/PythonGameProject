@@ -38,9 +38,19 @@ class Camera:
         rpos.x = self.screenWH.x * (v2.x - self.Rt.fx) / self.Width
         rpos.y = self.screenWH.y * (v2.y - self.Rt.fy) / self.Height
         return rpos
+    
+    def ScreenPosToWorldPos(self, wpos):
+        v2 = vec2(0, 0);
+        v2.x = wpos.x * self.Width / self.screenWH.x + self.Rt.fx;
+        v2.y = wpos.y * self.Height / self.screenWH.y + self.Rt.fy;
+        return v2;
+    
+    def WorldLenToScreenLen(self, len):
+        rate = ((self.screenWH.x / self.Width) + (self.screenWH.y / self.Height)) / 2
+        return len * rate;
 
 global MainCamera
 global WMAX, HMAX
-WMAX = 800;
-HMAX = 600;
+WMAX = 1000;
+HMAX = 700;
 MainCamera = Camera(vec2(0, 0), 2*WMAX, 2*HMAX, vec2(0, 0), 0.01, vec2(WMAX, HMAX))

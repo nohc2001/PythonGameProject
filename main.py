@@ -4,6 +4,7 @@ import os
 from pico2d import *
 from gameObj import *
 from Objects.Player import *
+from Objects.MaskyLight import*
 
 os.chdir('C:\\Users\\nohc2\\Dev\\PythonGame\\PythonGameProject')
 pico2d.open_canvas(WMAX, HMAX)
@@ -48,25 +49,31 @@ def init():
     sprarr.append(load_image('Resorceses/Tree0.png')) #4
     sprarr.append(load_image('Resorceses/Grass0.png')) #5
     sprarr.append(load_image('Resorceses/Flower0.png')) #6
+    sprarr.append(load_image('Resorceses/dark.png')) #7
 
     bgm = load_music('Resorceses\Sound\EnterToMagica0.mp3');
     bgm.set_volume(128);
     
     
-    playerobj = Player(rect4(0, 0, 200, 240), 1, sprarr[2], sprarr[3], game_manager)
+    playerobj = Player(rect4(0, 0, 200, 240), 101, sprarr[2], sprarr[3], game_manager)
     game_manager.AddObject(playerobj)
     
-    box = GameObject(rect4(100, 100, 300, 800), 0, sprarr[4], game_manager)
+    box = GameObject(rect4(100, 100, 300, 800), 100, sprarr[4], game_manager)
     game_manager.AddObject(box)
 
-    box = GameObject(rect4(100, 0, 100, 100), 0, sprarr[5], game_manager)
+    box = GameObject(rect4(100, 0, 100, 100), 100, sprarr[5], game_manager)
     game_manager.AddObject(box)
 
-    box = GameObject(rect4(200, 0, 100, 100), 0, sprarr[6], game_manager)
+    box = GameObject(rect4(200, 0, 100, 100), 100, sprarr[6], game_manager)
     game_manager.AddObject(box)
 
-    box = GameObject(rect4(-100, 0, 100, 100), 0, sprarr[5], game_manager)
+    box = GameObject(rect4(-100, 0, 100, 100), 100, sprarr[5], game_manager)
     game_manager.AddObject(box)
+
+    masklight = MaskyLight(-10000000, sprarr[7], game_manager, 50, 35, MainCamera);
+    masklight.AddLightData(LightData(vec2(0, 0), 200, vec2(500, 500), 10));
+    masklight.AddLightData(LightData(vec2(600, 0), 200, vec2(500, 500), 10));
+    game_manager.AddObject(masklight);
 
     bgm.repeat_play();
     return 0

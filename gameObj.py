@@ -44,7 +44,9 @@ class GameManager(Ptr):
         poolLen = len(self.objPool)
         i=0
         while(i < poolLen):
-            self.objPool[i].layer = self.objPool[i].location.fy;
+            if(self.objPool[i].layer < 10000000 and self.objPool[i].layer > -10000000):
+                self.objPool[i].layer = self.objPool[i].location.fy;
+
             k = i+1
             while(k < poolLen):
                 if self.objPool[i].layer < self.objPool[k].layer:
