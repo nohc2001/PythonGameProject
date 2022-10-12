@@ -1,6 +1,8 @@
+from dataclasses import dataclass
 from ast import operator
 import math
 
+@dataclass(Init=True)
 class vec2:
     def __init__(self, x, y):
         self.x = x
@@ -36,6 +38,7 @@ class vec2:
             v2.y = 0
             return v2
 
+@dataclass(Init=True)
 class straightLine:
     def __init__(self, pos0, pos1) -> None:
         self.xrate = pos1.x - pos0.x;
@@ -49,6 +52,7 @@ class straightLine:
     def GetXFromY(self, y):
         return self.xrate * (y - self.inDot.y) / self.yrate + self.inDot.x;
 
+@dataclass(Init=True)
 class rect4:
     def __init__(self, fx, fy, lx, ly):
         self.fx = fx

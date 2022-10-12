@@ -1,0 +1,311 @@
+
+
+void BoxCollider2D::MoveUpdate() {
+	//이 함수는 rect4f가 fx가 lx보다 항상 작을때를 가정하고 있다.
+	static bool SlipMode = true;
+
+	for (int i = 0; i < colliderPool.size(); i++) {
+		BoxCollider2D* col1 = &colliderPool[i];
+		if (col1->priority < 0) { // priority가 음수면 트리거처럼 작동함.
+			continue;
+		}
+
+		for (int k = 0; k < colliderPool.size(); k++) {
+			if (k == i) continue;
+			BoxCollider2D* col2 = &colliderPool[k];
+			if (col2->priority < 0) { // priority가 음수면 트리거처럼 작동함.
+				continue;
+			}
+
+			
+			//shp::rect의 자체함수를 사용하지 않는 이유는, 범용성보다는 성능을 챙기고 싶었기 때문이다.
+			if (bRectinRect(col1->rt + col1->velocity, col2->rt + col2->velocity) == false) {
+				//만약 충돌하지 않으면
+				continue;
+			}
+			else {
+				//충돌하면
+				if (col1->priority == col2->priority) {
+					int nomoveCount = 0;
+					if (col1->velocity.x == 0 && col2->velocity.x == 0) {
+						BoxCollider2D* left_col;
+						BoxCollider2D* right_col;
+
+						bool b = col1->rt.getCenter().x > col2->rt.getCenter().x;
+						left_col = b ? col2 : col1;
+						right_col = b ? col1 : col2;
+
+						b = left_col->velocity.x != 0;
+						float leftX = b ? left_col->rt.lx + left_col->velocity.x : left_col->rt.lx;
+						float rightX = b ? right_col->rt.fx : right_col->rt.fx + right_col->velocity.x;
+						if (true) {
+							// 이때 충돌처리 가능 - velocity를 바꿈.
+							float lvx = b ? 0 : left_col->velocity.x;
+							float rvx = b ? -right_col->velocity.x : 0;
+							float CenterX = (lvx * rightX + rvx * leftX) / (lvx + rvx);
+
+							float leftVelX = CenterX - leftX;
+							float rightVelX = CenterX - rightX;
+
+							shp::rect4f leftRT = (lvx != 0) ? left_col->rt + left_col->velocity * (leftVelX / lvx) : left_col->rt;
+							shp::rect4f rightRT = (rvx != 0) ? right_col->rt + right_col->velocity * (rightVelX / rvx) : right_col->rt;
+
+							bool movb = ((leftRT.fy < rightRT.fy&& rightRT.fy < leftRT.ly) || (leftRT.fy < rightRT.ly&& rightRT.ly < leftRT.ly))
+								|| ((rightRT.fy < leftRT.fy&& leftRT.fy < rightRT.ly) || (rightRT.fy < leftRT.ly&& leftRT.ly < rightRT.ly));
+							if (movb) {
+								if (SlipMode) {
+									left_col->velocity.x = (lvx != 0) ? left_col->velocity.x * (leftVelX / lvx) : left_col->velocity.x;
+									right_col->velocity.x = (rvx != 0) ? right_col->velocity.x * (rightVelX / rvx) : right_col->velocity.x;
+								}
+								else {
+									left_col->velocity = (lvx != 0) ? left_col->velocity * (leftVelX / lvx) : left_col->velocity;
+									right_col->velocity = (rvx != 0) ? right_col->velocity * (rightVelX / rvx) : right_col->velocity;
+								}
+							}
+							else {
+								nomoveCount++;
+							}
+						}
+						else
+						{
+							nomoveCount++;
+						}
+					}
+					else {
+						BoxCollider2D* left_col;
+						BoxCollider2D* right_col;
+
+						bool b = col1->rt.getCenter().x > col2->rt.getCenter().x;
+						left_col = b ? col2 : col1;
+						right_col = b ? col1 : col2;
+
+						float leftX = left_col->rt.lx;
+						float rightX = right_col->rt.fx;
+						if (leftX <= rightX) {
+							// 이때 충돌처리 가능 - velocity를 바꿈.
+							float lvx = left_col->velocity.x;
+							float rvx = -right_col->velocity.x;
+							float CenterX = (lvx * rightX + rvx * leftX) / (lvx + rvx);
+
+							float leftVelX = CenterX - leftX;
+							float rightVelX = CenterX - rightX;
+
+							shp::rect4f leftRT = (lvx != 0) ? left_col->rt + left_col->velocity * (leftVelX / lvx) : left_col->rt;
+							shp::rect4f rightRT = (rvx != 0) ? right_col->rt + right_col->velocity * (rightVelX / rvx) : right_col->rt;
+
+							bool movb = ((leftRT.fy < rightRT.fy&& rightRT.fy < leftRT.ly) || (leftRT.fy < rightRT.ly&& rightRT.ly < leftRT.ly))
+								|| ((rightRT.fy < leftRT.fy&& leftRT.fy < rightRT.ly) || (rightRT.fy < leftRT.ly&& leftRT.ly < rightRT.ly));
+							if (movb) {
+								if (SlipMode) {
+									left_col->velocity.x = (lvx != 0) ? left_col->velocity.x * (leftVelX / lvx) : left_col->velocity.x;
+									right_col->velocity.x = (rvx != 0) ? right_col->velocity.x * (rightVelX / rvx) : right_col->velocity.x;
+								}
+								else {
+									left_col->velocity = (lvx != 0) ? left_col->velocity * (leftVelX / lvx) : left_col->velocity;
+									right_col->velocity = (rvx != 0) ? right_col->velocity * (rightVelX / rvx) : right_col->velocity;
+								}
+							}
+							else {
+								nomoveCount++;
+							}
+						}
+						else
+						{
+							nomoveCount++;
+						}
+					}
+					
+					if (col1->velocity.y == 0 && col2->velocity.y == 0) {
+						BoxCollider2D* top_col;
+						BoxCollider2D* bottom_col;
+
+						bool b = col1->rt.getCenter().y > col2->rt.getCenter().y;
+						top_col = b ? col2 : col1;
+						bottom_col = b ? col1 : col2;
+
+						b = top_col->velocity.y != 0;
+						float topY = b ? top_col->rt.ly + top_col->velocity.y : top_col->rt.ly;
+						float bottomY = b ? bottom_col->rt.fy : bottom_col->rt.fy + bottom_col->velocity.y;
+						if (true) {
+							// 이때 충돌처리 가능 - velocity를 바꿈.
+							float tvx = b ? 0 : top_col->velocity.y;
+							float bvx = b ? -(bottom_col->velocity.y) : 0;
+							float CenterY = (tvx * bottomY + bvx * topY) / (tvx + bvx);
+
+							float topVelY = CenterY - topY;
+							float bottomVelY = CenterY - bottomY;
+
+							shp::rect4f topRT = (tvx != 0) ? top_col->rt + top_col->velocity * (topVelY / tvx) : top_col->rt;
+							shp::rect4f bottomRT = (bvx != 0) ? bottom_col->rt + bottom_col->velocity * (bottomVelY / bvx) : bottom_col->rt;
+
+							bool movb = ((topRT.fx < bottomRT.fx&& bottomRT.fx < topRT.lx) || (topRT.fx < bottomRT.lx&& bottomRT.lx < topRT.lx))
+								|| ((bottomRT.fx < topRT.fx&& topRT.fx < bottomRT.lx) || (bottomRT.fx < topRT.lx&& topRT.lx < bottomRT.lx));
+							if (movb) {
+								if (SlipMode) {
+									top_col->velocity.y = (tvx != 0) ? top_col->velocity.y * (topVelY / tvx) : top_col->velocity.y;
+									bottom_col->velocity.y = (bvx != 0) ? bottom_col->velocity.y * (bottomVelY / bvx) : bottom_col->velocity.y;
+								}
+								else {
+									top_col->velocity = (tvx != 0) ? top_col->velocity * (topVelY / tvx) : top_col->velocity;
+									bottom_col->velocity = (bvx != 0) ? bottom_col->velocity * (bottomVelY / bvx) : bottom_col->velocity;
+								}
+							}
+							else {
+								nomoveCount++;
+							}
+						}
+						else {
+							nomoveCount++;
+						}
+					}
+					else {
+						BoxCollider2D* top_col;
+						BoxCollider2D* bottom_col;
+
+						bool b = col1->rt.getCenter().y > col2->rt.getCenter().y;
+						top_col = b ? col2 : col1;
+						bottom_col = b ? col1 : col2;
+
+						float topY = top_col->rt.ly;
+						float bottomY = bottom_col->rt.fy;
+						if (true) {
+							// 이때 충돌처리 가능 - velocity를 바꿈.
+							float tvx = top_col->velocity.y;
+							float bvx = -(bottom_col->velocity.y);
+							float CenterY = (tvx * bottomY + bvx * topY) / (tvx + bvx);
+
+							float topVelY = CenterY - topY;
+							float bottomVelY = CenterY - bottomY;
+
+							shp::rect4f topRT = (tvx != 0) ? top_col->rt + top_col->velocity * (topVelY / tvx) : top_col->rt;
+							shp::rect4f bottomRT = (bvx != 0) ? bottom_col->rt + bottom_col->velocity * (bottomVelY / bvx) : bottom_col->rt;
+
+							bool movb = ((topRT.fx < bottomRT.fx&& bottomRT.fx < topRT.lx) || (topRT.fx < bottomRT.lx&& bottomRT.lx < topRT.lx))
+								|| ((bottomRT.fx < topRT.fx&& topRT.fx < bottomRT.lx) || (bottomRT.fx < topRT.lx&& topRT.lx < bottomRT.lx));
+							if (movb) {
+								if (SlipMode) {
+									top_col->velocity.y = (tvx != 0) ? top_col->velocity.y * (topVelY / tvx) : top_col->velocity.y;
+									bottom_col->velocity.y = (bvx != 0) ? bottom_col->velocity.y * (bottomVelY / bvx) : bottom_col->velocity.y;
+								}
+								else {
+									top_col->velocity = (tvx != 0) ? top_col->velocity * (topVelY / tvx) : top_col->velocity;
+									bottom_col->velocity = (bvx != 0) ? bottom_col->velocity * (bottomVelY / bvx) : bottom_col->velocity;
+								}
+							}
+							else {
+								nomoveCount++;
+							}
+						}
+						else {
+							nomoveCount++;
+						}
+					}
+					
+					if (nomoveCount >= 2) {
+						col1->velocity = shp::vec2f(0, 0);
+						col2->velocity = shp::vec2f(0, 0);
+					}
+				}
+				else {
+					int nomoveCount = 0;
+					//충돌하면
+					BoxCollider2D* left_col;
+					BoxCollider2D* right_col;
+
+					bool b = col1->rt.getCenter().x > col2->rt.getCenter().x;
+					left_col = b ? col2 : col1;
+					right_col = b ? col1 : col2;
+
+					b = left_col->priority > right_col->priority;
+					float leftX = b ? left_col->rt.lx + left_col->velocity.x : left_col->rt.lx;
+					float rightX = b ? right_col->rt.fx : right_col->rt.fx + right_col->velocity.x;
+					if (true) {
+						// 이때 충돌처리 가능 - velocity를 바꿈.
+						float lvx = b ? 0 : left_col->velocity.x;
+						float rvx = b ? -right_col->velocity.x : 0;
+						float CenterX = (lvx * rightX + rvx * leftX) / (lvx + rvx);
+
+						float leftVelX = CenterX - leftX;
+						float rightVelX = CenterX - rightX;
+
+						shp::rect4f leftRT = (lvx != 0) ? left_col->rt + left_col->velocity * (leftVelX / lvx) : left_col->rt;
+						shp::rect4f rightRT = (rvx != 0) ? right_col->rt + right_col->velocity * (rightVelX / rvx) : right_col->rt;
+
+						bool movb = ((leftRT.fy < rightRT.fy&& rightRT.fy < leftRT.ly) || (leftRT.fy < rightRT.ly&& rightRT.ly < leftRT.ly))
+							|| ((rightRT.fy < leftRT.fy&& leftRT.fy < rightRT.ly) || (rightRT.fy < leftRT.ly&& leftRT.ly < rightRT.ly));
+						if (movb) {
+							if (SlipMode) {
+								left_col->velocity.x = (lvx != 0) ? left_col->velocity.x * (leftVelX / lvx) : left_col->velocity.x;
+								right_col->velocity.x = (rvx != 0) ? right_col->velocity.x * (rightVelX / rvx) : right_col->velocity.x;
+							}
+							else {
+								left_col->velocity = (lvx != 0) ? left_col->velocity * (leftVelX / lvx) : left_col->velocity;
+								right_col->velocity = (rvx != 0) ? right_col->velocity * (rightVelX / rvx) : right_col->velocity;
+							}
+						}
+						else {
+							nomoveCount++;
+						}
+					}
+					else
+					{
+						nomoveCount++;
+					}
+
+					BoxCollider2D* top_col;
+					BoxCollider2D* bottom_col;
+
+					b = col1->rt.getCenter().y > col2->rt.getCenter().y;
+					top_col = b ? col2 : col1;
+					bottom_col = b ? col1 : col2;
+
+					b = top_col->priority > bottom_col->priority;
+					float topY = b ? top_col->rt.ly + top_col->velocity.y : top_col->rt.ly;
+					float bottomY = b ? bottom_col->rt.fy : bottom_col->rt.fy + bottom_col->velocity.y;
+					if (true) {
+						// 이때 충돌처리 가능 - velocity를 바꿈.
+						float tvx = b ? 0 : top_col->velocity.y;
+						float bvx = b ? -(bottom_col->velocity.y) : 0;
+						float CenterY = (tvx * bottomY + bvx * topY) / (tvx + bvx);
+
+						float topVelY = CenterY - topY;
+						float bottomVelY = CenterY - bottomY;
+
+						shp::rect4f topRT = (tvx != 0) ? top_col->rt + top_col->velocity * (topVelY / tvx) : top_col->rt;
+						shp::rect4f bottomRT = (bvx != 0) ? bottom_col->rt + bottom_col->velocity * (bottomVelY / bvx) : bottom_col->rt;
+
+						bool movb = ((topRT.fx < bottomRT.fx&& bottomRT.fx < topRT.lx) || (topRT.fx < bottomRT.lx&& bottomRT.lx < topRT.lx))
+							|| ((bottomRT.fx < topRT.fx&& topRT.fx < bottomRT.lx) || (bottomRT.fx < topRT.lx&& topRT.lx < bottomRT.lx));
+						if (movb) {
+							if (SlipMode) {
+								top_col->velocity.y = (tvx != 0) ? top_col->velocity.y * (topVelY / tvx) : top_col->velocity.y;
+								bottom_col->velocity.y = (bvx != 0) ? bottom_col->velocity.y * (bottomVelY / bvx) : bottom_col->velocity.y;
+							}
+							else {
+								top_col->velocity = (tvx != 0) ? top_col->velocity * (topVelY / tvx) : top_col->velocity;
+								bottom_col->velocity = (bvx != 0) ? bottom_col->velocity * (bottomVelY / bvx) : bottom_col->velocity;
+							}
+						}
+						else {
+							nomoveCount++;
+						}
+					}
+					else {
+						nomoveCount++;
+					}
+
+					if (bRectContact(col1->rt, col2->rt)) {
+						// priority가 작은 충돌체에 걷보기 priority를 준다.
+					}
+
+					if (nomoveCount >= 2) {
+						col1->velocity = shp::vec2f(0, 0);
+						col2->velocity = shp::vec2f(0, 0);
+					}
+				}
+			}
+		}
+		
+		col1->rt = col1->rt + col1->velocity;
+	}
+}

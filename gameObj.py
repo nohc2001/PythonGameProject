@@ -2,13 +2,76 @@ from dataclasses import dataclass
 from pico2d import *
 from SpaceMath import *
 from Camera import *
+import ctypes;
 
 global sprarr
 sprarr = []
 
 class Ptr:
     def __init__(self):
-        a = 1
+        pass
+
+@dataclass(Init=True)
+class Collider:
+    def __init__(self) -> None:
+        self.colRT = rect4(0, 0, 0, 0);
+        self.velocity = vec2(0, 0);
+        pass
+
+class ColidLayer:
+    def __init__(self, name, priority) -> None:
+        self.name = name;
+        self.priority = priority;
+        self.objList = []; # 이 레이어에 있는 오브젝트들의 id(리스트의 인덱스)
+        self.consideringLayer = [];
+        pass
+
+    def AddConsideringLayer(self, layerID):
+        self.consideringLayer.append(layerID);
+        pass
+
+class ColidManager:
+    def __init__(self) -> None:
+        self.Layers = [];
+        self.Relation = [];
+        pass
+
+    def SortByPriority(self):
+        index = 0;
+        while(index < len(self.Layers)):
+            kindex = index + 1;
+            while(kindex < len(self.Layers)):
+                if(self.Layers[kindex].priority > self.Layers[index].priority):
+                    ins_layer = self.Layers[kindex];
+                    self.Layers[kindex] = self.Layers[index];
+                    self.Layers[index] = ins_layer;
+                kindex += 1;
+            index += 1;
+
+    def AddLayer(self, name, priority):
+        self.Layers.append(ColidLayer(name, priority));
+        pass
+
+    def AddObjToCollidLayer(self, layer_name, objid):
+        index = 0;
+        isadd = False;
+        while(index < len(self.Layers)):
+            if(self.Layers[index].name == layer_name):
+                self.Layers[index].objList.append(objid);
+                isadd = True;
+            index += 1;
+        if(isadd == False):
+            self.Layers.append(ColidLayer(layer_name, 0));
+            index = 0;
+            isadd = False;
+            while(index < len(self.Layers)):
+                if(self.Layers[index].name == layer_name):
+                    self.Layers[index].objList.append(objid);
+                index += 1;
+        pass
+
+    def MoveUpdate(self, deltaTime):
+        pass
 
 @dataclass(init=True)
 class Part:
@@ -59,6 +122,7 @@ class GameObject:
         self.layer = layer
         self.spr = spr
         self.gm = gm
+        self.col = Collider() # location을 기준으로 하는 좌표계
     
     def update(self, deltaTime):
         return 0
@@ -83,6 +147,8 @@ class GameManager(Ptr):
         self.objPool = []
         self.isArrange = False
         
+        self.colManager = ColidManager();
+
         self.partPool = [];
         self.partMax = 2048;
         self.partup = 0; #고려할 개수
