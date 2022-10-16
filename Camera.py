@@ -25,6 +25,10 @@ class Camera:
         self.Height += (result.y - self.Height) * deltaTime
 
         self.Rt = rect4(self.center.x-self.Width/2, self.center.y-self.Height/2, self.center.x+self.Width/2, self.center.y+self.Height/2)
+        if(self.Rt.fx > self.Rt.lx):
+            nn = self.Rt.lx;
+            self.Rt.lx = self.Rt.fx;
+            self.Rt.fx = nn;
         return 0
     
     def bObjInCamera(self, obj):

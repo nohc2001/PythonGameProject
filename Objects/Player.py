@@ -4,11 +4,9 @@ from Camera import*
 
 class Player(GameObject):
     def __init__(self, location, layer, walkspr, idlespr, gm):
-        self.location = location
-        self.layer = layer
+        super().__init__(location, layer, idlespr, gm);
         self.walkspr = walkspr
         self.idlespr = idlespr
-        self.gm = gm
         self.AKeyDown = False
         self.SKeyDown = False
         self.DKeyDown = False
@@ -21,9 +19,16 @@ class Player(GameObject):
         
         self.movedir = 1
 
-        self.Speed = 1
+        self.Speed = 3;
+        self.gravity = 0.1;
+        self.AddY = 0;
+        self.jumpForce = 5;
     
     def update(self, deltaTime):
+        if(self.col.velocity.y == 0):
+            self.AddY = 0;
+        self.location.Move(self.col.velocity);
+
         #Frame Update
         if(self.state == 'walk'):
             self.walkMaxFrame = 25
@@ -39,22 +44,22 @@ class Player(GameObject):
                 self.presentFrame = 0
         
         global MainCamera
-        moveDelta = vec2(0, 0)
+        self.col.velocity = vec2(0, 0)
         if self.AKeyDown:
-            moveDelta += vec2(-1, 0)
+            self.col.velocity += vec2(-1, 0)
             self.movedir = -1
-        if self.SKeyDown:
-            moveDelta += vec2(0, -1)
-            
         if self.DKeyDown:
-            moveDelta += vec2(1, 0)
+            self.col.velocity += vec2(1, 0)
             self.movedir = 1
         if self.WKeyDown:
-            moveDelta += vec2(0, 1)
+            if(self.AddY == 0):
+                self.AddY = -self.jumpForce;
+                
+        self.col.velocity = self.col.velocity * self.Speed
+        self.AddY += self.gravity;
+        self.col.velocity.y -= self.AddY;
         
-        moveDelta = moveDelta * self.Speed
-        self.location.Move(moveDelta)
-        camcenter = self.location.getcenter() + moveDelta*10
+        camcenter = self.location.getcenter() + self.col.velocity*10
         MainCamera.MoveTo(camcenter, vec2(1600, 1200))
         return 0
     
@@ -108,4 +113,3 @@ class Player(GameObject):
             if event.key == SDLK_w:
                 self.WKeyDown = False
         return 0
-    

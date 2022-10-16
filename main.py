@@ -57,32 +57,54 @@ def init():
     sprarr.append(load_image('Resorceses/Particles/p_fire11.png')) #11
     sprarr.append(load_image('Resorceses/Particles/p_fire20.png')) #12
 
+    fontObj.append(load_font('Resorceses/Font/OK CHAN.ttf')); #1
+
     bgm = load_music('Resorceses\Sound\EnterToMagica0.mp3');
     bgm.set_volume(128);
     
     playerobj = Player(rect4(0, 0, 200, 240), 101, sprarr[2], sprarr[3], game_manager)
+    playerobj.col.colRT = playerobj.location;
+    game_manager.colManager.AddLayer("Player", 20);
+    game_manager.colManager.AddObjToCollidLayer("Player", playerobj);
+
     game_manager.AddObject(playerobj)
     
-    box = GameObject(rect4(100, 100, 300, 800), 100, sprarr[4], game_manager)
-    game_manager.AddObject(box)
+    game_manager.AddObject(GameObject(rect4(100, -100, 300, 600), 120, sprarr[4], game_manager))
+    game_manager.AddObject(GameObject(rect4(100, -100, 100, 0), 100, sprarr[5], game_manager))
+    
+    
+    box = GameObject(rect4(300, 100, 400, 200), 100, sprarr[1], game_manager);
+    game_manager.AddObject(box);
+    box.col = Collider();
+    box.col.colRT = box.location;
+    game_manager.colManager.AddLayer("Box", 10);
+    game_manager.colManager.AddObjToCollidLayer("Box", box);
 
-    box = GameObject(rect4(100, 0, 100, 100), 100, sprarr[5], game_manager)
-    game_manager.AddObject(box)
+    floor = GameObject(rect4(-500, -500, 500, -100), 100, sprarr[1], game_manager);
+    game_manager.AddObject(floor);
+    floor.col = Collider();
+    floor.col.colRT = floor.location;
+    game_manager.colManager.AddObjToCollidLayer("Box", floor);
 
-    box = GameObject(rect4(500, 0, 100, 100), 100, sprarr[6], game_manager)
-    game_manager.AddObject(box)
+    box2 = GameObject(rect4(-400, 100, -300, 200), 100, sprarr[1], game_manager);
+    game_manager.AddObject(box2);
+    box2.col = Collider();
+    box2.col.colRT = box2.location;
+    game_manager.colManager.AddObjToCollidLayer("Box", box2);
 
-    box = GameObject(rect4(-100, 0, 100, 100), 100, sprarr[5], game_manager)
-    game_manager.AddObject(box)
+    game_manager.AddObject(GameObject(rect4(-100, -100, 100, 0), 100, sprarr[5], game_manager))
 
     masklight = MaskyLight(-10000000, sprarr[7], game_manager, 50, 35, MainCamera);
     masklight.AddLightData(LightData(vec2(0, 0), 200, vec2(500, 500), 10));
     masklight.AddLightData(LightData(vec2(600, 0), 200, vec2(500, 500), 10));
     game_manager.AddObject(masklight);
 
-    particle = Particles(rect4(0, 0, 0, 0), vec2(50, 100), vec2(135, 45), 30, 100, vec2(1, 10), vec2(10, 50), 1000, 
+    game_manager.colManager.AddRelation("Player", "Box");
+    
+    particle = Particles(rect4(0, 0, 0, 0), vec2(300, 500), vec2(95, 85), 500, 20, vec2(1, 10), vec2(10, 50), 1000, 
         [sprarr[8], sprarr[9], sprarr[10], sprarr[11], sprarr[12]], game_manager);
     game_manager.AddObject(particle);
+    
 
     bgm.repeat_play();
     return 0
@@ -110,7 +132,7 @@ def main():
         clear_canvas()
 
         game_manager.Render(MainCamera)
-
+        fontObj[0].draw(500, 500, '마법 입문', (0, 0, 0));
         update_canvas()
 
         events = get_events()

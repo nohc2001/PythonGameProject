@@ -1,17 +1,28 @@
 from dataclasses import dataclass
+from gc import get_objects
 from pico2d import *
 from SpaceMath import *
 from Camera import *
 import ctypes;
 
-global sprarr
-sprarr = []
+global sprarr;
+sprarr = [];
+global fontObj;
+fontObj = [];
+
+def bRectinRect(rt1, rt2):
+    if ((rt1.fx <= rt2.fx and rt2.fx <= rt1.lx) or (rt1.fx <= rt2.lx and rt2.lx <= rt1.lx)) and ((rt1.fy <= rt2.fy and rt2.fy <= rt1.ly) or (rt1.fy <= rt2.ly and rt2.ly <= rt1.ly)):
+        return True;
+    elif((rt2.fx <= rt1.fx and rt1.fx <= rt2.lx) or (rt2.fx <= rt1.lx and rt1.lx <= rt2.lx)) and ((rt2.fy <= rt1.fy and rt1.fy <= rt2.ly) or (rt2.fy <= rt1.ly and rt1.ly <= rt2.ly)):
+        return True;
+    else:
+        return False;
 
 class Ptr:
     def __init__(self):
         pass
 
-@dataclass(Init=True)
+@dataclass(init=True)
 class Collider:
     def __init__(self) -> None:
         self.colRT = rect4(0, 0, 0, 0);
@@ -23,17 +34,290 @@ class ColidLayer:
         self.name = name;
         self.priority = priority;
         self.objList = []; # 이 레이어에 있는 오브젝트들의 id(리스트의 인덱스)
-        self.consideringLayer = [];
+        self.consideringLayer = []; # 이 레이어 보다 먼저 움직이는 오브젝트의 레이어가 항목으로 들어감.
+        self.bSelfCollid = False;
         pass
 
-    def AddConsideringLayer(self, layerID):
-        self.consideringLayer.append(layerID);
+    def AddConsideringLayer(self, layer):
+        self.consideringLayer.append(layer);
+        pass
+
+    def MoveUpdate(self, deltaTime):
+        if(self.bSelfCollid):
+            i = 0;
+            while(i < len(self.objList)):
+                k = i+1;
+                while(k < len(self.objList)):
+                    get_objects()
+                    obj1 = self.objList[objindex];
+                    obj2 = self.objList[o_objindex];
+                    self.TwoObjUpdate(obj1, obj2, False);
+                    k += 1;
+                i += 1;
+
+        index = 0;
+        while(index < len(self.consideringLayer)):
+            olayer = self.consideringLayer[index];
+            objindex = 0;
+            while(objindex < len(self.objList)):
+                o_objindex = 0;
+                while(o_objindex < len(olayer.objList)):
+                    obj1 = self.objList[objindex];
+                    obj2 = olayer.objList[o_objindex];
+                    self.TwoObjUpdate(obj1, obj2, True);
+                    o_objindex += 1;
+                objindex += 1;
+            index += 1;
+        pass
+
+    def TwoObjUpdate(self, obj1, obj2, secondFrozen):
+        if(secondFrozen == False):
+            rt1m = obj1.col.colRT;
+            rt1m.Move(obj1.col.velocity);
+
+            rt2m = obj2.col.colRT;
+            rt2m.Move(obj2.col.velocity);
+
+            if(bRectinRect(rt1m, rt2m) == False):
+                return False;
+            
+            nomoveCount = 0;
+            col1 = obj1.col;
+            col2 = obj2.col;
+            if (obj1.col.velocity.x == 0 and obj2.col.velocity.x == 0):
+                left_col = Collider();
+                right_col = Collider();
+
+                b = col1.colRT.getCenter().x > col2.colRT.getCenter().x;
+                if(b):
+                    left_col = col2;
+                    right_col = col1;
+                else:
+                    left_col = col1;
+                    right_col = col2;
+                
+                leftX = 0;
+                rightX = 0;
+                lvx = 0;
+                rvx = 0;
+                b = left_col.velocity.x != 0;
+                if(b):
+                    leftX = left_col.colRT.lx + left_col.velocity.x;
+                    rightX = right_col.colRT.fx;
+                    lvx = 0;
+                    rvx = -right_col.velocity.x;
+                else:
+                    leftX = left_col.colRT.lx ;
+                    rightX = right_col.colRT.fx + right_col.velocity.x;
+                    lvx = left_col.velocity;
+                    rvx = 0;
+
+                CenterX = (lvx * rightX + rvx * leftX) / (lvx + rvx);
+
+                leftVelX = CenterX - leftX;
+                rightVelX = CenterX - rightX;
+
+                leftRT = rect4();
+                rightRT = rect4();
+
+                if(lvx != 0):
+                    leftRT = left_col.colRT + left_col.velocity * (leftVelX / lvx);
+                else:
+                    leftRT = left_col.colRT;
+                if(rvx != 0):
+                    rightRT = right_col.colRT + right_col.velocity * (rightVelX / rvx);
+                else:
+                    rightRT = right_col.colRT;
+                
+                if ((leftRT.fy < rightRT.fy and rightRT.fy < leftRT.ly) or (leftRT.fy < rightRT.ly and rightRT.ly < leftRT.ly)) or ((rightRT.fy < leftRT.fy and leftRT.fy < rightRT.ly) or (rightRT.fy < leftRT.ly and leftRT.ly < rightRT.ly)):
+                    if(lvx != 0):
+                        left_col.velocity = left_col.velocity * (leftVelX / lvx);
+                    if(rvx != 0):
+                        right_col.velocity = right_col.velocity * (rightVelX / rvx);
+                else:
+                    nomoveCount += 1;
+            else:
+                left_col = Collider();
+                right_col = Collider();
+
+                b = col1.colRT.getCenter().x > col2.colRT.getCenter().x;
+                if(b):
+                    left_col = col2;
+                    right_col = col1;
+                else:
+                    left_col = col1;
+                    right_col = col2;
+                
+                leftX = left_col.colRT.lx;
+                rightX = right_col.colRT.fx;
+                if (leftX <= rightX):
+
+                    lvx = left_col.velocity.x;
+                    rvx = -right_col.velocity.x;
+                    CenterX = (lvx * rightX + rvx * leftX) / (lvx + rvx);
+                    
+                    leftVelX = CenterX - leftX;
+                    rightVelX = CenterX - rightX;
+
+                    leftRT = rect4();
+                    rightRT = rect4();
+                    if(lvx != 0):
+                        leftRT = left_col.colRT + left_col.velocity * (leftVelX / lvx);
+                    else:
+                        leftRT = left_col.colRT;
+                    
+                    if(rvx != 0):
+                        rightRT = right_col.colRT + right_col.velocity * (rightVelX / rvx);
+                    else:
+                        rightRT = right_col.colRT;
+
+                    if((leftRT.fy < rightRT.fy and rightRT.fy < leftRT.ly) or (leftRT.fy < rightRT.ly and rightRT.ly < leftRT.ly)) or ((rightRT.fy < leftRT.fy and leftRT.fy < rightRT.ly) or (rightRT.fy < leftRT.ly and leftRT.ly < rightRT.ly)):
+                        if(lvx != 0):
+                            left_col.velocity = left_col.velocity * (leftVelX / lvx);
+                        else:
+                            left_col.velocity = left_col.velocity;
+
+                        if(rvx != 0):
+                            right_col.velocity = right_col.velocity * (rightVelX / rvx);
+                        else:
+                            right_col.velocity = right_col.velocity;
+                    else:
+                        nomoveCount += 1;
+                else:
+                    nomoveCount += 1;
+
+            if (obj1.col.velocity.y == 0 and obj2.col.velocity.y == 0):
+                top_col = Collider();
+                bottom_col = Collider();
+
+                b = col1.colRT.getCenter().y > col2.colRT.getCenter().y;
+                if(b):
+                    top_col = col2;
+                    bottom_col = col1;
+                else:
+                    top_col = col1;
+                    bottom_col = col2;
+                
+                topY = 0;
+                bottomY = 0;
+                tvy = 0;
+                bvy = 0;
+                b = top_col.velocity.y != 0;
+                if(b):
+                    topY = top_col.colRT.ly + top_col.velocity.y;
+                    bottomY = bottom_col.colRT.fy;
+                    tvy = 0;
+                    bvy = -bottom_col.velocity.y;
+                else:
+                    topY = top_col.colRT.ly;
+                    bottomY = bottom_col.colRT.fy + bottom_col.velocity.y;
+                    tvy = top_col.velocity.y;
+                    bvy = 0;
+
+                CenterY = (tvy * bottomY + bvy * topY) / (tvy + bvy);
+
+                topVelY = CenterY - topY;
+                bottomVelY = CenterY - bottomY;
+
+                topRT = rect4();
+                bottomRT = rect4();
+
+                if(tvy != 0):
+                    topRT = top_col.colRT + top_col.velocity * (topVelY / tvy);
+                else:
+                    topRT = top_col.colRT;
+                if(bvy != 0):
+                    bottomRT = bottom_col.colRT + bottom_col.velocity * (bottomVelY / bvy);
+                else:
+                    bottomRT = bottom_col.colRT;
+                
+                if ((topRT.fx < bottomRT.fx and bottomRT.fx < topRT.lx) or (topRT.fx < bottomRT.lx and bottomRT.lx < topRT.lx)) or ((bottomRT.fx < topRT.fx and topRT.fx < bottomRT.lx) or (bottomRT.fx < topRT.lx and topRT.lx < bottomRT.lx)):
+                    if(tvy != 0):
+                        top_col.velocity = top_col.velocity * (topVelY / tvy);
+                    if(bvy != 0):
+                        bottom_col.velocity = bottom_col.velocity * (bottomVelY / bvy);
+                else:
+                    nomoveCount += 1;
+            else:
+                top_col = Collider();
+                bottom_col = Collider();
+
+                b = col1.colRT.getCenter().y > col2.colRT.getCenter().y;
+                if(b):
+                    top_col = col2;
+                    bottom_col = col1;
+                else:
+                    top_col = col1;
+                    bottom_col = col2;
+                
+                topY = top_col.colRT.ly;
+                bottomY = bottom_col.colRT.fy;
+                if (topY <= bottomY):
+                    tvy = top_col.velocity.y;
+                    bvy = -bottom_col.velocity.y;
+                    CenterY = (tvy * bottomY + bvy * topY) / (tvy + bvy);
+                    
+                    topVelY = CenterY - topY;
+                    bottomVelY = CenterY - bottomY;
+
+                    topRT = rect4();
+                    bottomRT = rect4();
+                    if(tvy != 0):
+                        topRT = top_col.colRT + top_col.velocity * (topVelY / tvy);
+                    else:
+                        topRT = top_col.colRT;
+                    
+                    if(bvy != 0):
+                        bottomRT = bottom_col.colRT + bottom_col.velocity * (bottomVelY / bvy);
+                    else:
+                        bottomRT = bottom_col.colRT;
+
+                    if((topRT.fx < rightRT.fx and rightRT.fx < topRT.lx) or (topRT.fx < rightRT.lx and rightRT.lx < topRT.lx)) or ((rightRT.fx < leftRT.fx and leftRT.fx < rightRT.lx) or (rightRT.fx < leftRT.lx and leftRT.lx < rightRT.lx)):
+                        if(tvy != 0):
+                            top_col.velocity = top_col.velocity * (topVelY / tvy);
+                        else:
+                            top_col.velocity = top_col.velocity;
+
+                        if(bvy != 0):
+                            bottom_col.velocity = bottom_col.velocity * (bottomVelY / bvy);
+                        else:
+                            bottom_col.velocity = bottom_col.velocity;
+                    else:
+                        nomoveCount += 1;
+                else:
+                    nomoveCount += 1;
+
+            if (nomoveCount >= 2):
+                col1.velocity = vec2(0, 0);
+                col2.velocity = vec2(0, 0);
+        else:
+            rt1m = copy_rect4(obj1.col.colRT);
+            rt1m.Move(obj1.col.velocity);
+
+            rt2m = obj2.col.colRT;
+
+            if(bRectinRect(rt1m, rt2m) == False):
+                print("col : false");
+                return False;
+            else:
+                print("col : true");
+                rt1m = copy_rect4(obj1.col.colRT);
+                rt1m.Move(vec2(obj1.col.velocity.x, 0));
+                if(bRectinRect(rt1m, rt2m) == False):
+                    obj1.col.velocity = vec2(obj1.col.velocity.x, 0);
+                    return True;
+                rt1m = copy_rect4(obj1.col.colRT);
+                rt1m.Move(vec2(0, obj1.col.velocity.y));
+                if(bRectinRect(rt1m, rt2m) == False):
+                    obj1.col.velocity = vec2(0, obj1.col.velocity.y);
+                    return True;
+                obj1.col.velocity = vec2(0, 0);
+                return True;
         pass
 
 class ColidManager:
     def __init__(self) -> None:
         self.Layers = [];
-        self.Relation = [];
         pass
 
     def SortByPriority(self):
@@ -71,7 +355,27 @@ class ColidManager:
         pass
 
     def MoveUpdate(self, deltaTime):
+        index = 0;
+        while(index < len(self.Layers)):
+            self.Layers[index].MoveUpdate(deltaTime);
+            index += 1;
         pass
+
+    def AddRelation(self, name1, name2):
+        index = 0;
+        layer1 = self.Layers[0];
+        layer2 = self.Layers[1];
+        while(index < len(self.Layers)):
+            if(self.Layers[index].name == name1):
+                layer1 = self.Layers[index];
+            
+            if(self.Layers[index].name == name2):
+                layer2 = self.Layers[index];
+            index += 1;
+        
+        layer1.AddConsideringLayer(layer2);
+        pass;
+    
 
 @dataclass(init=True)
 class Part:
@@ -128,7 +432,8 @@ class GameObject:
         return 0
     
     def render(self, camera):
-        if camera.bObjInCamera(self):
+        #if camera.bObjInCamera(self):
+        if True:
             fpos = camera.WorldPosToScreenPos(self.location.getfpos())
             lpos = camera.WorldPosToScreenPos(self.location.getlpos())
             ObjInScreenRt = rect4(fpos.x, fpos.y, lpos.x, lpos.y)
@@ -179,9 +484,6 @@ class GameManager(Ptr):
         poolLen = len(self.objPool)
         i=0
         while(i < poolLen):
-            if(self.objPool[i].layer < 10000000 and self.objPool[i].layer > -10000000):
-                self.objPool[i].layer = self.objPool[i].location.fy;
-
             k = i+1
             while(k < poolLen):
                 if self.objPool[i].layer < self.objPool[k].layer:
@@ -191,9 +493,11 @@ class GameManager(Ptr):
                 k += 1
             i += 1
         
+        self.colManager.MoveUpdate(deltaTime);
+
         for obj in self.objPool:
             obj.update(deltaTime)
-        
+
         pindex = 0;
         while(pindex < self.partup):
             if(self.partPool[pindex].enable):

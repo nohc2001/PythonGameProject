@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from ast import operator
 import math
 
-@dataclass(Init=True)
+@dataclass(init=True)
 class vec2:
     def __init__(self, x, y):
         self.x = x
@@ -38,7 +38,7 @@ class vec2:
             v2.y = 0
             return v2
 
-@dataclass(Init=True)
+@dataclass(init=True)
 class straightLine:
     def __init__(self, pos0, pos1) -> None:
         self.xrate = pos1.x - pos0.x;
@@ -52,7 +52,7 @@ class straightLine:
     def GetXFromY(self, y):
         return self.xrate * (y - self.inDot.y) / self.yrate + self.inDot.x;
 
-@dataclass(Init=True)
+@dataclass(init=True)
 class rect4:
     def __init__(self, fx, fy, lx, ly):
         self.fx = fx
@@ -98,6 +98,14 @@ class rect4:
         self.lx += v2.x
         self.fy += v2.y
         self.ly += v2.y
+
+def copy_rect4(other):
+    rt = rect4(0, 0, 0, 0);
+    rt.fx = other.fx;
+    rt.fy = other.fy;
+    rt.lx = other.lx;
+    rt.ly = other.ly;
+    return rt;
 
 def get_distance(pos0, pos1):
     return math.sqrt(math.pow(pos1.x - pos0.x, 2) + math.pow(pos1.y - pos0.y, 2));
