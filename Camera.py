@@ -45,6 +45,7 @@ class Camera:
     
     def ScreenPosToWorldPos(self, wpos):
         v2 = vec2(0, 0);
+        wpos.y = HMAX - wpos.y;
         v2.x = wpos.x * self.Width / self.screenWH.x + self.Rt.fx;
         v2.y = wpos.y * self.Height / self.screenWH.y + self.Rt.fy;
         return v2;

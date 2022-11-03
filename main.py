@@ -1,5 +1,3 @@
-
-from multiprocessing import active_children
 import os
 from pico2d import *
 from Objects.Particles import *
@@ -25,23 +23,77 @@ def EventExecute(event):
 
 global addx
 addx = 0
-
 global game_manager
 game_manager = GameManager()
-
 global saveClock
 global presentClock
 saveClock = 0
 presentClock = 0
-
 global bgm;
 bgm = 0;
+LevelEditMode = True;
+
+class GameColideData:
+    image = pico2d.load_image("Resorceses/GCD.png");
+    def __init__(self, rt):
+        self.RT = rt;
+        pass;
+    
+    def sort(self):
+        if(self.RT.fx > self.RT.lx):
+            self.RT.fx, self.RT.lx = self.RT.lx, self.RT.fx;
+        if(self.RT.fy > self.RT.ly):
+            self.RT.fy, self.RT.ly = self.RT.ly, self.RT.fy;
+        pass
+    
+    def render(self, camera):
+        fpos = camera.WorldPosToScreenPos(self.RT.getfpos())
+        lpos = camera.WorldPosToScreenPos(self.RT.getlpos())
+        ObjInScreenRt = rect4(fpos.x, fpos.y, lpos.x, lpos.y)
+        GameColideData.image.draw(int(ObjInScreenRt.getcenter().x), int(ObjInScreenRt.getcenter().y), int(ObjInScreenRt.getwid()), int(ObjInScreenRt.gethei()));
+        pass;
+
+def copy_GCD(GCD):
+    gcd = GameColideData(GCD.RT);
+    return gcd;
+
+class EditData:
+    AddMode = 'ready';
+    AddingGCD = GameColideData(rect4(0, 0, 0, 0));
+    def __init__(self) -> None:
+        self.GCDArr = [];
+        pass
+
+    def AddObj(self, gcd):
+        self.GCDArr.append(gcd);
+        pass;
+    
+    def Render(self, camera):
+        index = 0;
+        #EditData.AddingGCD.render(camera);
+        while(index < len(self.GCDArr)):
+            self.GCDArr[index].render(camera);
+            index += 1;
+        pass;
+    
+    def Event(self, event):
+        if(EditData.AddMode == 'ready'):
+            if(event.type == SDL_MOUSEBUTTONDOWN and event.button == SDL_BUTTON_LEFT):
+                EditData.AddMode = 'making';
+                pos = MainCamera.ScreenPosToWorldPos(vec2(event.x, event.y));
+                EditData.AddingGCD.RT = rect4(pos.x, pos.y, 0, 0);
+        elif(EditData.AddMode == 'making'):
+            if(event.type == SDL_MOUSEBUTTONUP and event.button == SDL_BUTTON_LEFT):
+                pos = MainCamera.ScreenPosToWorldPos(vec2(event.x, event.y));
+                EditData.AddingGCD.RT = rect4(EditData.AddingGCD.RT.fx, EditData.AddingGCD.RT.fy, pos.x, pos.y);
+                EditData.AddingGCD.sort();
+                self.AddObj(copy_GCD(EditData.AddingGCD));
+                EditData.AddMode = 'ready';
+        pass;
 
 def init():
-    global sprarr
-    global game_manager
-    global bgm
-    
+    global sprarr, game_manager, bgm, LevelEditMode;
+
     #sprite init
     sprarr.append(load_image('tica.png')) #0
     sprarr.append(load_image('table_value_2.png')) #1
@@ -58,6 +110,9 @@ def init():
     sprarr.append(load_image('Resorceses/Particles/p_fire20.png')) #12
 
     fontObj.append(load_font('Resorceses/Font/OK CHAN.ttf')); #1
+
+    if(LevelEditMode):
+        return;
 
     bgm = load_music('Resorceses\Sound\EnterToMagica0.mp3');
     bgm.set_volume(128);
@@ -109,37 +164,77 @@ def init():
     bgm.repeat_play();
     return 0
 
+editdata = EditData();
+moveflow = vec2(0, 0.1);
 def main():
     init()
-    global addx
-    global isRunning
-    global game_manager
-    global saveClock
-    global presentClock
-    global MainCamera
+    global isRunning, game_manager, saveClock, presentClock, MainCamera, LevelEditMode
 
-    saveClock = pico2d.get_time()
-    while(1):
-        if(isRunning == False):
-            return 0
+    if(LevelEditMode == False):
+        saveClock = pico2d.get_time()
+        while(1):
+            if(isRunning == False):
+                return 0
         
-        presentClock = pico2d.get_time()
-        deltaTime = presentClock - saveClock
+            presentClock = pico2d.get_time()
+            deltaTime = presentClock - saveClock
 
-        game_manager.Update(deltaTime)
-        MainCamera.Update(deltaTime)
+            game_manager.Update(deltaTime)
+            MainCamera.Update(deltaTime)
 
-        clear_canvas()
+            clear_canvas()
 
-        game_manager.Render(MainCamera)
-        fontObj[0].draw(500, 500, '마법 입문', (0, 0, 0));
-        update_canvas()
+            game_manager.Render(MainCamera)
+            #fontObj[0].draw(500, 500, '마법 입문', (0, 0, 0));
+            update_canvas()
 
-        events = get_events()
-        for event in events:
-            EventExecute(event)
-            game_manager.Event(event)
+            events = get_events()
+            for event in events:
+                EventExecute(event)
+                game_manager.Event(event)
 
         saveClock = presentClock
+    else:
+        rkey, lkey, ukey, dkey = False, False, False, False;
+        saveClock = pico2d.get_time()
+        while(1):
+            if(isRunning == False):
+                return 0
+        
+            presentClock = pico2d.get_time()
+            deltaTime = presentClock - saveClock
+
+            #game_manager.Update(deltaTime)
+            MainCamera.Update(deltaTime/1000.0)
+
+            clear_canvas()
+
+            #game_manager.Render(MainCamera)
+            #fontObj[0].draw(500, 500, '마법 입문', (0, 0, 0));
+            editdata.Render(MainCamera);
+            update_canvas()
+
+            moveflow.x += deltaTime/1000.0;
+
+            events = get_events()
+            for event in events:
+                EventExecute(event)
+                if(event.type == SDL_KEYDOWN and event.key == SDLK_RIGHT):
+                    rkey = True;
+                    MainCamera.MoveTo(MainCamera.destpos + vec2(100, 0), MainCamera.destWH);
+                if(event.type == SDL_KEYDOWN and event.key == SDLK_LEFT):
+                    lkey = True;
+                    MainCamera.MoveTo(MainCamera.destpos + vec2(-100, 0), MainCamera.destWH);
+                if(event.type == SDL_KEYDOWN and event.key == SDLK_UP):
+                    ukey = True;
+                    MainCamera.MoveTo(MainCamera.destpos + vec2(0, 100), MainCamera.destWH);
+                if(event.type == SDL_KEYDOWN and event.key == SDLK_DOWN):
+                    
+                    MainCamera.MoveTo(MainCamera.destpos + vec2(0, -100), MainCamera.destWH);
+                editdata.Event(event);
+                #game_manager.Event(event)
+
+        saveClock = presentClock;
+    pass;
 
 main()
