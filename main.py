@@ -32,6 +32,7 @@ presentClock = 0
 global bgm;
 bgm = 0;
 LevelEditMode = True;
+LevelEdit_PlayMode = False;
 moveflow = vec2(0, 1);
 rkey, lkey, ukey, dkey = False, False, False, False;
 
@@ -63,7 +64,7 @@ class GameColideData:
             while(yindex < ObjInScreenRt.gethei()//100):
                 xindex = 0;
                 while(xindex < ObjInScreenRt.getwid()//100):
-                    self.TileImage.draw(int(ObjInScreenRt.fx + 50 + xindex*100), int(ObjInScreenRt.fy + 50 + yindex*100), 100, 100);
+                    self.TileImage.draw(int(ObjInScreenRt.fx + 50 + xindex*100)-1, int(ObjInScreenRt.fy + 50 + yindex*100)-1, 102, 102);
                     xindex += 1;
                 yindex += 1;
             
@@ -71,16 +72,16 @@ class GameColideData:
             ywid = ObjInScreenRt.gethei() - (ObjInScreenRt.gethei()//100) * 100;
             xindex = 0;
             while(xindex < ObjInScreenRt.getwid()//100):
-                self.TileImage.clip_draw(0, 0, 100, int(ywid), int(ObjInScreenRt.fx + 50 + xindex*100), int(ObjInScreenRt.fy + (ObjInScreenRt.gethei()//100) * 100 + ywid/2), 100, ywid);
+                self.TileImage.clip_draw(0, 0, 100, int(ywid), int(ObjInScreenRt.fx + 50 + xindex*100)-1, int(ObjInScreenRt.fy + (ObjInScreenRt.gethei()//100) * 100 + ywid/2)-1, 102, ywid+2);
                 xindex += 1;
             
             xwid = ObjInScreenRt.getwid() - (ObjInScreenRt.getwid()//100) * 100;
             yindex = 0;
             while(yindex < ObjInScreenRt.gethei()//100):
-                self.TileImage.clip_draw(0, 0, int(xwid), 100, int(ObjInScreenRt.fx + (ObjInScreenRt.getwid()//100) * 100 + xwid/2), int(ObjInScreenRt.fy + 50 + yindex*100), xwid, 100);
+                self.TileImage.clip_draw(0, 0, int(xwid), 100, int(ObjInScreenRt.fx + (ObjInScreenRt.getwid()//100) * 100 + xwid/2)-1, int(ObjInScreenRt.fy + 50 + yindex*100)-1, xwid+2, 102);
                 yindex += 1;
             
-            self.TileImage.clip_draw(0, 0, int(xwid), int(ywid), int(ObjInScreenRt.fx + (ObjInScreenRt.getwid()//100) * 100 + xwid/2), int(ObjInScreenRt.fy + (ObjInScreenRt.gethei()//100) * 100 + ywid/2), xwid, ywid);
+            self.TileImage.clip_draw(0, 0, int(xwid), int(ywid), int(ObjInScreenRt.fx + (ObjInScreenRt.getwid()//100) * 100 + xwid/2)-1, int(ObjInScreenRt.fy + (ObjInScreenRt.gethei()//100) * 100 + ywid/2)-1, xwid+2, ywid+2);
         pass;
 
 def copy_GCD(GCD):
@@ -206,14 +207,63 @@ def init():
     particle = Particles(rect4(0, 0, 0, 0), vec2(300, 500), vec2(95, 85), 500, 20, vec2(1, 10), vec2(10, 50), 1000, 
         [sprarr[8], sprarr[9], sprarr[10], sprarr[11], sprarr[12]], game_manager);
     game_manager.AddObject(particle);
-    
 
     bgm.repeat_play();
     return 0
 
+def editplayinit():
+    global sprarr, game_manager, bgm, LevelEditMode;
+    #sprite init
+
+    game_manager.objPool = [];
+    game_manager.colManager.Layers = [];
+    sprarr = [];
+    del bgm;
+
+    sprarr.append(load_image('tica.png')) #0
+    sprarr.append(load_image('table_value_2.png')) #1
+    sprarr.append(load_image('Resorceses/char_walk.png')) #2
+    sprarr.append(load_image('Resorceses/char_idle.png')) #3
+    sprarr.append(load_image('Resorceses/Tree0.png')) #4
+    sprarr.append(load_image('Resorceses/Grass0.png')) #5
+    sprarr.append(load_image('Resorceses/Flower0.png')) #6
+    sprarr.append(load_image('Resorceses/dark.png')) #7
+    sprarr.append(load_image('Resorceses/Particles/p_fire00.png')) #8
+    sprarr.append(load_image('Resorceses/Particles/p_fire01.png')) #9
+    sprarr.append(load_image('Resorceses/Particles/p_fire10.png')) #10
+    sprarr.append(load_image('Resorceses/Particles/p_fire11.png')) #11
+    sprarr.append(load_image('Resorceses/Particles/p_fire20.png')) #12
+
+    fontObj.append(load_font('Resorceses/Font/OK CHAN.ttf')); #1
+
+    bgm = load_music('Resorceses\Sound\EnterToMagica0.mp3');
+    bgm.set_volume(128);
+
+    playerobj = Player(rect4(0, 0, 200, 240), 101, sprarr[2], sprarr[3], game_manager)
+    playerobj.col.colRT = playerobj.location;
+    game_manager.colManager.AddLayer("Player", 20);
+    game_manager.colManager.AddObjToCollidLayer("Player", playerobj);
+
+    game_manager.AddObject(playerobj)
+
+    game_manager.colManager.AddLayer("Box", 10);
+    index = 0;
+    while(index < len(editdata.GCDArr)):
+        floor = GameObject(editdata.GCDArr[index].RT, 100, sprarr[1], game_manager);
+        game_manager.AddObject(floor);
+        floor.col = Collider();
+        floor.col.colRT = floor.location;
+        game_manager.colManager.AddObjToCollidLayer("Box", floor);
+        index += 1;
+
+    game_manager.colManager.AddRelation("Player", "Box");
+
+    bgm.repeat_play();
+    pass;
+
 def main():
     init()
-    global isRunning, game_manager, saveClock, presentClock, MainCamera, LevelEditMode
+    global isRunning, game_manager, saveClock, presentClock, MainCamera, LevelEditMode, LevelEdit_PlayMode
     global rkey, lkey, ukey, dkey;
 
     if(LevelEditMode == False):
@@ -250,12 +300,13 @@ def main():
             deltaTime = presentClock - saveClock
 
             editdata.Update(deltaTime/1000.0);
-            #game_manager.Update(deltaTime)
+            if(LevelEdit_PlayMode):
+                game_manager.Update(deltaTime/1000.0);
             MainCamera.Update(deltaTime/1000.0)
 
             clear_canvas()
-
-            #game_manager.Render(MainCamera)
+            if(LevelEdit_PlayMode):
+                game_manager.Render(MainCamera);
             #fontObj[0].draw(500, 500, '마법 입문', (0, 0, 0));
             editdata.Render(MainCamera);
             update_canvas()
@@ -264,23 +315,34 @@ def main():
 
             events = get_events()
             for event in events:
+                if(LevelEdit_PlayMode):
+                    game_manager.Event(event);
+
                 EventExecute(event)
-                if(event.type == SDL_KEYDOWN and event.key == SDLK_RIGHT):
-                    rkey = True;
-                if(event.type == SDL_KEYDOWN and event.key == SDLK_LEFT):
-                    lkey = True;
-                if(event.type == SDL_KEYDOWN and event.key == SDLK_UP):
-                    ukey = True;
-                if(event.type == SDL_KEYDOWN and event.key == SDLK_DOWN):
-                    dkey = True;
-                if(event.type == SDL_KEYUP and event.key == SDLK_RIGHT):
-                    rkey = False;
-                if(event.type == SDL_KEYUP and event.key == SDLK_LEFT):
-                    lkey = False;
-                if(event.type == SDL_KEYUP and event.key == SDLK_UP):
-                    ukey = False;
-                if(event.type == SDL_KEYUP and event.key == SDLK_DOWN):
-                    dkey = False;
+                if(LevelEdit_PlayMode == False):
+                    if(event.type == SDL_KEYDOWN and event.key == SDLK_RIGHT):
+                        rkey = True;
+                    if(event.type == SDL_KEYDOWN and event.key == SDLK_LEFT):
+                        lkey = True;
+                    if(event.type == SDL_KEYDOWN and event.key == SDLK_UP):
+                        ukey = True;
+                    if(event.type == SDL_KEYDOWN and event.key == SDLK_DOWN):
+                        dkey = True;
+                    if(event.type == SDL_KEYUP and event.key == SDLK_RIGHT):
+                        rkey = False;
+                    if(event.type == SDL_KEYUP and event.key == SDLK_LEFT):
+                        lkey = False;
+                    if(event.type == SDL_KEYUP and event.key == SDLK_UP):
+                        ukey = False;
+                    if(event.type == SDL_KEYUP and event.key == SDLK_DOWN):
+                        dkey = False;
+                if(event.type == SDL_KEYDOWN and event.key == SDLK_p):
+                    if(LevelEdit_PlayMode):
+                        LevelEdit_PlayMode = False;
+                    else:
+                        editplayinit();
+                        LevelEdit_PlayMode = True;
+                        
                 editdata.Event(event);
                 #game_manager.Event(event)
 

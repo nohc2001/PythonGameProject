@@ -15,7 +15,7 @@ class Player(GameObject):
         self.state = 'idle';
         self.walkMaxFrame = 25
         self.presentFrame = 0
-        self.FrameUpdateDelta = vec2(0, 0.03)
+        self.FrameUpdateDelta = vec2(0, 0.3)
         
         self.movedir = 1
 
