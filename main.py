@@ -32,11 +32,16 @@ presentClock = 0
 global bgm;
 bgm = 0;
 LevelEditMode = True;
+moveflow = vec2(0, 1);
+rkey, lkey, ukey, dkey = False, False, False, False;
 
 class GameColideData:
     image = pico2d.load_image("Resorceses/GCD.png");
+    tileImages = [];
+    tileImages.append(pico2d.load_image("Resorceses/Tile/Tile0.png"));
     def __init__(self, rt):
         self.RT = rt;
+        self.TileImage = GameColideData.tileImages[0];
         pass;
     
     def sort(self):
@@ -47,10 +52,35 @@ class GameColideData:
         pass
     
     def render(self, camera):
-        fpos = camera.WorldPosToScreenPos(self.RT.getfpos())
-        lpos = camera.WorldPosToScreenPos(self.RT.getlpos())
+        fpos = camera.WorldPosToScreenPos(vec2(min([self.RT.fx, self.RT.lx]), min([self.RT.fy, self.RT.ly])));
+        lpos = camera.WorldPosToScreenPos(vec2(max([self.RT.fx, self.RT.lx]), max([self.RT.fy, self.RT.ly])))
         ObjInScreenRt = rect4(fpos.x, fpos.y, lpos.x, lpos.y)
-        GameColideData.image.draw(int(ObjInScreenRt.getcenter().x), int(ObjInScreenRt.getcenter().y), int(ObjInScreenRt.getwid()), int(ObjInScreenRt.gethei()));
+        if(self.TileImage == None):
+            GameColideData.image.draw(int(ObjInScreenRt.getcenter().x), int(ObjInScreenRt.getcenter().y), int(ObjInScreenRt.getwid()), int(ObjInScreenRt.gethei()));
+        else:
+            GameColideData.image.draw(int(ObjInScreenRt.getcenter().x), int(ObjInScreenRt.getcenter().y), int(ObjInScreenRt.getwid()), int(ObjInScreenRt.gethei()));
+            yindex = 0;
+            while(yindex < ObjInScreenRt.gethei()//100):
+                xindex = 0;
+                while(xindex < ObjInScreenRt.getwid()//100):
+                    self.TileImage.draw(int(ObjInScreenRt.fx + 50 + xindex*100), int(ObjInScreenRt.fy + 50 + yindex*100), 100, 100);
+                    xindex += 1;
+                yindex += 1;
+            
+            #remainRender
+            ywid = ObjInScreenRt.gethei() - (ObjInScreenRt.gethei()//100) * 100;
+            xindex = 0;
+            while(xindex < ObjInScreenRt.getwid()//100):
+                self.TileImage.clip_draw(0, 0, 100, int(ywid), int(ObjInScreenRt.fx + 50 + xindex*100), int(ObjInScreenRt.fy + (ObjInScreenRt.gethei()//100) * 100 + ywid/2), 100, ywid);
+                xindex += 1;
+            
+            xwid = ObjInScreenRt.getwid() - (ObjInScreenRt.getwid()//100) * 100;
+            yindex = 0;
+            while(yindex < ObjInScreenRt.gethei()//100):
+                self.TileImage.clip_draw(0, 0, int(xwid), 100, int(ObjInScreenRt.fx + (ObjInScreenRt.getwid()//100) * 100 + xwid/2), int(ObjInScreenRt.fy + 50 + yindex*100), xwid, 100);
+                yindex += 1;
+            
+            self.TileImage.clip_draw(0, 0, int(xwid), int(ywid), int(ObjInScreenRt.fx + (ObjInScreenRt.getwid()//100) * 100 + xwid/2), int(ObjInScreenRt.fy + (ObjInScreenRt.gethei()//100) * 100 + ywid/2), xwid, ywid);
         pass;
 
 def copy_GCD(GCD):
@@ -58,6 +88,7 @@ def copy_GCD(GCD):
     return gcd;
 
 class EditData:
+    global rkey, lkey, ukey, dkey;
     AddMode = 'ready';
     AddingGCD = GameColideData(rect4(0, 0, 0, 0));
     def __init__(self) -> None:
@@ -70,26 +101,42 @@ class EditData:
     
     def Render(self, camera):
         index = 0;
-        #EditData.AddingGCD.render(camera);
+        EditData.AddingGCD.render(camera);
         while(index < len(self.GCDArr)):
             self.GCDArr[index].render(camera);
             index += 1;
         pass;
     
+    def Update(self, delta):
+        if(rkey == True):
+            MainCamera.MoveTo(MainCamera.destpos + vec2(300*delta, 0), MainCamera.destWH);
+        if(lkey == True):
+            MainCamera.MoveTo(MainCamera.destpos + vec2(-300*delta, 0), MainCamera.destWH);
+        if(ukey == True):
+            MainCamera.MoveTo(MainCamera.destpos + vec2(0, 300 * delta), MainCamera.destWH);
+        if(dkey == True):
+            MainCamera.MoveTo(MainCamera.destpos + vec2(0, -300 * delta), MainCamera.destWH);
+        pass;
+    
     def Event(self, event):
+        if(event.type == SDL_KEYDOWN and event.key == SDLK_0):
+            MainCamera.destpos = vec2(0, 0);
+
         if(EditData.AddMode == 'ready'):
             if(event.type == SDL_MOUSEBUTTONDOWN and event.button == SDL_BUTTON_LEFT):
                 EditData.AddMode = 'making';
                 pos = MainCamera.ScreenPosToWorldPos(vec2(event.x, event.y));
                 EditData.AddingGCD.RT = rect4(pos.x, pos.y, 0, 0);
         elif(EditData.AddMode == 'making'):
+            pos = MainCamera.ScreenPosToWorldPos(vec2(event.x, event.y));
+            EditData.AddingGCD.RT = rect4(EditData.AddingGCD.RT.fx, EditData.AddingGCD.RT.fy, pos.x, pos.y);
             if(event.type == SDL_MOUSEBUTTONUP and event.button == SDL_BUTTON_LEFT):
-                pos = MainCamera.ScreenPosToWorldPos(vec2(event.x, event.y));
-                EditData.AddingGCD.RT = rect4(EditData.AddingGCD.RT.fx, EditData.AddingGCD.RT.fy, pos.x, pos.y);
                 EditData.AddingGCD.sort();
                 self.AddObj(copy_GCD(EditData.AddingGCD));
                 EditData.AddMode = 'ready';
         pass;
+
+editdata = EditData();
 
 def init():
     global sprarr, game_manager, bgm, LevelEditMode;
@@ -164,11 +211,10 @@ def init():
     bgm.repeat_play();
     return 0
 
-editdata = EditData();
-moveflow = vec2(0, 0.1);
 def main():
     init()
     global isRunning, game_manager, saveClock, presentClock, MainCamera, LevelEditMode
+    global rkey, lkey, ukey, dkey;
 
     if(LevelEditMode == False):
         saveClock = pico2d.get_time()
@@ -195,7 +241,6 @@ def main():
 
         saveClock = presentClock
     else:
-        rkey, lkey, ukey, dkey = False, False, False, False;
         saveClock = pico2d.get_time()
         while(1):
             if(isRunning == False):
@@ -204,6 +249,7 @@ def main():
             presentClock = pico2d.get_time()
             deltaTime = presentClock - saveClock
 
+            editdata.Update(deltaTime/1000.0);
             #game_manager.Update(deltaTime)
             MainCamera.Update(deltaTime/1000.0)
 
@@ -221,16 +267,20 @@ def main():
                 EventExecute(event)
                 if(event.type == SDL_KEYDOWN and event.key == SDLK_RIGHT):
                     rkey = True;
-                    MainCamera.MoveTo(MainCamera.destpos + vec2(100, 0), MainCamera.destWH);
                 if(event.type == SDL_KEYDOWN and event.key == SDLK_LEFT):
                     lkey = True;
-                    MainCamera.MoveTo(MainCamera.destpos + vec2(-100, 0), MainCamera.destWH);
                 if(event.type == SDL_KEYDOWN and event.key == SDLK_UP):
                     ukey = True;
-                    MainCamera.MoveTo(MainCamera.destpos + vec2(0, 100), MainCamera.destWH);
                 if(event.type == SDL_KEYDOWN and event.key == SDLK_DOWN):
-                    
-                    MainCamera.MoveTo(MainCamera.destpos + vec2(0, -100), MainCamera.destWH);
+                    dkey = True;
+                if(event.type == SDL_KEYUP and event.key == SDLK_RIGHT):
+                    rkey = False;
+                if(event.type == SDL_KEYUP and event.key == SDLK_LEFT):
+                    lkey = False;
+                if(event.type == SDL_KEYUP and event.key == SDLK_UP):
+                    ukey = False;
+                if(event.type == SDL_KEYUP and event.key == SDLK_DOWN):
+                    dkey = False;
                 editdata.Event(event);
                 #game_manager.Event(event)
 
