@@ -74,7 +74,7 @@ class Monster(GameObject):
             
             if(self.presentFrame == 25):
                 if(self.attackDelay.x > self.attackDelay.y):
-                    self.AddHitbox('Monster', self.location, 0.5, 10);
+                    self.AddHitbox('Monster', self.location, 0.1, 10);
                     self.attackDelay.x = 0;
 
         self.attackDelay.x += deltaTime;
