@@ -15,16 +15,20 @@ class Player(GameObject):
         self.state = 'idle';
         self.walkMaxFrame = 25
         self.presentFrame = 0
-        self.FrameUpdateDelta = vec2(0, 0.3)
+        self.FrameUpdateDelta = vec2(0, 0.03)
         
         self.movedir = 1
 
-        self.Speed = 3;
+        self.Speed = 300;
         self.gravity = 0.1;
         self.AddY = 0;
         self.jumpForce = 5;
+
+        self.HP = 0;
+        self.maxHP = 100;
     
     def update(self, deltaTime):
+        self.col.colRT = self.location;
         if(self.col.velocity.y == 0):
             self.AddY = 0;
         self.location.Move(self.col.velocity);
@@ -55,11 +59,11 @@ class Player(GameObject):
             if(self.AddY == 0):
                 self.AddY = -self.jumpForce;
                 
-        self.col.velocity = self.col.velocity * self.Speed
+        self.col.velocity = self.col.velocity * self.Speed * deltaTime
         self.AddY += self.gravity;
         self.col.velocity.y -= self.AddY;
         
-        camcenter = self.location.getcenter() + self.col.velocity*10
+        camcenter = self.location.getcenter() + self.col.velocity;
         MainCamera.MoveTo(camcenter, vec2(1600, 1200))
         return 0
     

@@ -27,6 +27,7 @@ class Collider:
     def __init__(self) -> None:
         self.colRT = rect4(0, 0, 0, 0);
         self.velocity = vec2(0, 0);
+        self.isTrigger = False;
         pass
 
 class ColidLayer:
