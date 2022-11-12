@@ -12,17 +12,18 @@ class Monster(GameObject):
 
         self.state = 'idle';
         self.target = target;
+        self.attackDelay = vec2(0, 0.2);
 
         self.attackMaxFrame = 41;
         self.walkMaxFrame = 21;
         self.idleMaxFrame = 31;
-        self.presentFrame = 0
+        self.presentFrame = 0;
         self.MaxFrame = 0;
         self.FrameUpdateDelta = vec2(0, 0.03)
         
         self.movedir = 1
 
-        self.Speed = 300;
+        self.Speed = 200;
         self.gravity = 0.1;
         self.AddY = 0;
         self.jumpForce = 5;
@@ -31,10 +32,11 @@ class Monster(GameObject):
         self.chaseRange = 700;
         self.attackRange = 100;
 
-        self.HP = 0;
-        self.MaxHP = 100;
+        self.HP = 100;
+        self.maxHP = 100;
     
     def update(self, deltaTime):
+        if(self.HP <= 0): return;
         self.col.colRT = self.location;
 
         if(self.col.velocity.y == 0):
@@ -69,6 +71,13 @@ class Monster(GameObject):
                     self.movedir = -1
                 else:
                     self.movedir = +1
+            
+            if(self.presentFrame == 25):
+                if(self.attackDelay.x > self.attackDelay.y):
+                    self.AddHitbox('Monster', self.location, 0.5, 10);
+                    self.attackDelay.x = 0;
+
+        self.attackDelay.x += deltaTime;
 
         self.FrameUpdateDelta.x += deltaTime
         if(self.FrameUpdateDelta.x > self.FrameUpdateDelta.y):
@@ -77,6 +86,15 @@ class Monster(GameObject):
                 self.presentFrame += 1
             else:
                 self.presentFrame = 0
+        
+        for hb in self.gm.HitboxPool:
+            if((hb.isHit == False and hb.tag == 'Player') and hb.colRT.bRectTouchRect(self.location)):
+                hb.isHit = True;
+                self.HP -= hb.Damage;
+                self.col.velocity += vec2(-50 * self.movedir, 0);
+                self.AddY = -3;
+                self.presentFrame = 0;
+                self.state = 'idle';
                 
         self.col.velocity = self.col.velocity * self.Speed * deltaTime;
         self.AddY += self.gravity;
@@ -84,6 +102,7 @@ class Monster(GameObject):
         return 0
     
     def render(self, camera):
+        if(self.HP <= 0): return;
         if camera.bObjInCamera(self):
             fpos = camera.WorldPosToScreenPos(self.location.getfpos())
             lpos = camera.WorldPosToScreenPos(self.location.getlpos())
@@ -114,20 +133,23 @@ class Monster(GameObject):
                 widmul = 1.5;
                 heimul = 1.3;
                 yoffset = self.location.getwid() / 12;
-                
-            print(widmul);
+            
 
             if(self.movedir < 0):
                 Wid = spr.w / self.MaxFrame ;
                 Hei = spr.h / 2
-                spr.clip_draw(int(self.presentFrame * Wid), 0, int(Wid), int(Hei), ObjInScreenRt.getcenter().x-xoffset, ObjInScreenRt.getcenter().y+yoffset, ObjInScreenRt.getwid()*widmul, ObjInScreenRt.gethei()*heimul)
+                spr.clip_draw(int((self.presentFrame) * Wid), 0, int(Wid), int(Hei), ObjInScreenRt.getcenter().x-xoffset, ObjInScreenRt.getcenter().y+yoffset, ObjInScreenRt.getwid()*widmul, ObjInScreenRt.gethei()*heimul)
             else:
                 Wid = spr.w / self.MaxFrame ;
                 Hei = spr.h / 2
                 spr.clip_draw(spr.w - int((self.presentFrame+1) * Wid), int(Hei), int(Wid), int(Hei), ObjInScreenRt.getcenter().x+xoffset, ObjInScreenRt.getcenter().y+yoffset, ObjInScreenRt.getwid()*widmul, ObjInScreenRt.gethei()*heimul)
             #self.spr.clip_draw(Wid*self.presentFrame, 0, Wid, Hei , ObjInScreenRt.getcenter().x, ObjInScreenRt.getcenter().y, ObjInScreenRt.getwid(), ObjInScreenRt.gethei())
             #self.spr.draw(ObjInScreenRt.getcenter().x, ObjInScreenRt.getcenter().y, ObjInScreenRt.getwid(), ObjInScreenRt.gethei());
+
+            GameObject.HPBAR_image.draw(ObjInScreenRt.getcenter().x, ObjInScreenRt.fy - 30, 100, 15);
+            GameObject.HP_image.draw(ObjInScreenRt.getcenter().x - (95 - int(95*(self.HP/self.maxHP)))/2, ObjInScreenRt.fy - 30, int(95*(self.HP/self.maxHP)), 12);
         return 0
     
     def event(self, event):
+        if(self.HP <= 0): return;
         return 0

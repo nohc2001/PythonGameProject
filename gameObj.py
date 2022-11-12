@@ -27,7 +27,16 @@ class Collider:
     def __init__(self) -> None:
         self.colRT = rect4(0, 0, 0, 0);
         self.velocity = vec2(0, 0);
-        self.isTrigger = False;
+        pass
+
+@dataclass(init=True)
+class Hitbox:
+    def __init__(self, rt, tag, maxtime, damage) -> None:
+        self.colRT = rt
+        self.tag = tag
+        self.timeflow = vec2(0, maxtime);
+        self.isHit = False;
+        self.Damage = 10;
         pass
 
 class ColidLayer:
@@ -422,17 +431,22 @@ class Part:
         pass
 
 class GameObject:
+    HPBAR_image = None;
+    HP_image = None;
+
     def __init__(self, location, layer, spr, gm):
         self.location = location
         self.layer = layer
         self.spr = spr
         self.gm = gm
+        self.visible = True;
         self.col = Collider() # location을 기준으로 하는 좌표계
     
     def update(self, deltaTime):
         return 0
     
     def render(self, camera):
+        if(self.visible == False): return;
         #if camera.bObjInCamera(self):
         if True:
             fpos = camera.WorldPosToScreenPos(self.location.getfpos())
@@ -447,6 +461,10 @@ class GameObject:
     def SetGameManager(self, gameManager):
         self.gm = gameManager
         return 0
+    
+    def AddHitbox(self, Tag, rt, maxtime, damage):
+        hb = Hitbox(rt, Tag, maxtime, damage);
+        self.gm.HitboxPool.append(hb);
 
 class GameManager(Ptr):
     def __init__(self):
@@ -459,13 +477,15 @@ class GameManager(Ptr):
         self.partMax = 2048;
         self.partup = 0; #고려할 개수
 
+        self.HitboxPool = [];
+
         index = 0;
         while(index < self.partMax):
             self.partPool.append(Part(vec2(0, 0), vec2(0, 0), 0, 0, 0, 0));
             self.partPool[index].enable = False;
             index += 1;
         pass
-    
+
     def AddPart(self, pos, dir, rad, gravity, maxtime, spr):
         if(self.partup + 1 < self.partMax):
             part = Part(pos, dir, rad, gravity, maxtime, spr);
@@ -508,6 +528,14 @@ class GameManager(Ptr):
                     self.partup -= 1;
             pindex += 1;
         
+        for hb in self.HitboxPool:
+            hb.timeflow.x += deltaTime;
+            if(hb.timeflow.x > hb.timeflow.y):
+                hb.isHit = True;
+            
+            if(hb.isHit):
+                self.HitboxPool.remove(hb);
+                del hb;
         pass
 
     def AddObject(self, obj):

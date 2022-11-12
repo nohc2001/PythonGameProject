@@ -423,7 +423,7 @@ def init():
     bgm = load_music('Resorceses\Sound\EnterToMagica0.mp3');
     bgm.set_volume(128);
     
-    playerobj = Player(rect4(0, 0, 200, 240), 101, sprarr[2], sprarr[3], game_manager)
+    playerobj = Player(rect4(0, 0, 200, 240), 101, sprarr[2], sprarr[3], sprarr[16], game_manager)
     playerobj.col.colRT = playerobj.location;
     game_manager.colManager.AddLayer("Player", 20);
     game_manager.colManager.AddObjToCollidLayer("Player", playerobj);
@@ -496,6 +496,9 @@ def editplayinit():
 
     del bgm;
 
+    GameObject.HPBAR_image = pico2d.load_image('Resorceses/HPBAR_BAR.png');
+    GameObject.HP_image = pico2d.load_image('Resorceses/HPBAR_HP.png');
+
     sprarr.append(load_image('tica.png')) #0
     sprarr.append(load_image('table_value_2.png')) #1
     sprarr.append(load_image('Resorceses/char_walk.png')) #2
@@ -512,13 +515,13 @@ def editplayinit():
     sprarr.append(load_image('Resorceses/SpriteSheet/Goblin/goblin_idle.png')) #13
     sprarr.append(load_image('Resorceses/SpriteSheet/Goblin/goblin_walk.png')) #14
     sprarr.append(load_image('Resorceses/SpriteSheet/Goblin/goblin_attack.png')) #15
-
+    sprarr.append(load_image('Resorceses/SpriteSheet/Player/player_attack.png')) #16
     fontObj.append(load_font('Resorceses/Font/OK CHAN.ttf')); #1
 
     bgm = load_music('Resorceses\Sound\EnterToMagica0.mp3');
     bgm.set_volume(128);
 
-    playerobj = Player(rect4(0, 0, 200, 240), 101, sprarr[2], sprarr[3], game_manager)
+    playerobj = Player(rect4(0, 0, 200, 240), 101, sprarr[2], sprarr[3], sprarr[16], game_manager)
     playerobj.col.colRT = playerobj.location;
     game_manager.colManager.AddLayer("Player", 20);
     game_manager.colManager.AddObjToCollidLayer("Player", playerobj);
@@ -537,6 +540,7 @@ def editplayinit():
         game_manager.AddObject(floor);
         floor.col = Collider();
         floor.col.colRT = floor.location;
+        floor.visible = False;
         game_manager.colManager.AddObjToCollidLayer("Box", floor);
         index += 1;
 
@@ -544,6 +548,8 @@ def editplayinit():
 
     bgm.repeat_play();
     pass;
+
+background = load_image('Resorceses/SKY0.png');
 
 def main():
     init()
@@ -589,10 +595,12 @@ def main():
             MainCamera.Update(deltaTime)
 
             clear_canvas()
+            background.draw(WMAX/2, HMAX/2, WMAX, HMAX);
+            editdata.Render(MainCamera);
+
             if(LevelEdit_PlayMode):
                 game_manager.Render(MainCamera);
             
-            editdata.Render(MainCamera);
             fontObj[0].draw(0, 100, 'col : ' + str(editdata.addobjiscol) + ' mode : ' + editdata.AddMode + ' Selection : ' + str(editSelectIndex) + ' Layer : ' + str(EditData.addTargetLayer), (0, 0, 0));
             update_canvas()
 
@@ -613,6 +621,8 @@ def main():
                         ctrlkey = False;
                 
                 if(LevelEdit_PlayMode == False):
+                    editdata.Event(event);
+
                     if(event.type == SDL_KEYDOWN):
                         if(event.key == SDLK_RIGHT):
                             rkey = True;
@@ -668,7 +678,7 @@ def main():
                     else:
                         editplayinit();
                         LevelEdit_PlayMode = True;
-                editdata.Event(event);
+                
                 #game_manager.Event(event)
             saveClock = presentClock;
 
