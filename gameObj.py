@@ -4,6 +4,7 @@ from pico2d import *
 from SpaceMath import *
 from Camera import *
 import ctypes;
+import random;
 
 global sprarr;
 sprarr = [];
@@ -38,6 +39,103 @@ class Hitbox:
         self.isHit = False;
         self.Damage = 10;
         pass
+
+class Projectile:
+    sprlist = None;
+
+    def __init__(self, startPos, dir, tag, damage, gm) -> None:
+        if(Projectile.sprlist == None):
+            Projectile.sprlist = [];
+            Projectile.sprlist.append(load_image('Resorceses/Particles/arcane.png')); #0
+            Projectile.sprlist.append(load_image('Resorceses/Particles/p_fire00.png')); #1
+            Projectile.sprlist.append(load_image('Resorceses/Particles/p_fire01.png')); #2
+            Projectile.sprlist.append(load_image('Resorceses/Particles/p_fire10.png')); #3
+            Projectile.sprlist.append(load_image('Resorceses/Particles/p_fire11.png')); #4
+            Projectile.sprlist.append(load_image('Resorceses/Particles/p_fire20.png')); #5
+            Projectile.sprlist.append(load_image('Resorceses/Particles/ice0.png')); #6
+            Projectile.sprlist.append(load_image('Resorceses/Particles/ice1.png')); #7
+            Projectile.sprlist.append(load_image('Resorceses/Particles/ice2.png')); #8
+            #Projectile.sprlist.append(load_image('Resorceses/Particles/p_fire00.png')); #9
+            #Projectile.sprlist.append(load_image('Resorceses/Particles/p_fire00.png')); #10
+            #Projectile.sprlist.append(load_image('Resorceses/Particles/p_fire00.png')); #11
+            #Projectile.sprlist.append(load_image('Resorceses/Particles/p_fire00.png')); #12
+
+        self.pos = startPos;
+        self.dir = dir;
+        self.hitbox = Hitbox(rect4(self.pos.x - 10, self.pos.y-10, self.pos.x+10, self.pos.y+10), tag, 100, damage);
+        self.partflow = vec2(0, 0.01);
+        self.projectflow = vec2(0, 5);
+        self.gm = gm;
+        pass
+
+    def update(self, delta):
+        spr = Projectile.sprlist[0];
+        if(self.hitbox.tag == 'Monster'):
+            spr = Projectile.sprlist[0];
+        elif(self.hitbox.tag == 'Player_Fire'):
+            spr = Projectile.sprlist[random.randint(1, 5)];
+        elif(self.hitbox.tag == 'Player_Ice'):
+            spr = Projectile.sprlist[random.randint(6, 8)];
+
+        self.partflow.x += delta;
+        if(self.partflow.y < self.partflow.x):
+            self.partflow.x = 0;
+            self.gm.AddPart(self.pos, vec2(1, random.randint(-100, 100)), 20, 1000 + random.randint(-500, 500), 1, spr);
+        
+        self.projectflow.x += delta;
+        if(self.projectflow.x > self.projectflow.y):
+            self.hitbox.isHit = True;
+
+        self.pos = self.pos + self.dir * delta;
+        self.hitbox.colRT = rect4(self.pos.x - 10, self.pos.y-10, self.pos.x+10, self.pos.y+10);
+        pass;
+
+class RootItem:
+    sprlist = None;
+
+    def __init__(self, pos, itemname, target) -> None:
+        if(RootItem.sprlist == None):
+            RootItem.sprlist = [];
+            RootItem.sprlist.append(load_image('Resorceses/ItemIcon/gold.png'));
+            RootItem.sprlist.append(load_image('Resorceses/ItemIcon/HealthPotion.png'));
+        
+        # 플레이어 오브젝트가 들어감
+
+
+        self.target = target;
+        
+        self.enable = True;
+        self.pos = pos;
+        self.itemname = itemname;
+        self.dropflow = vec2(0, 0.5);
+        if(self.itemname == 'health_potion'):
+            self.itemid = 1;
+        elif(self.itemname == 'gold'):
+            self.itemid = 0;
+        pass
+
+    def update(self, delta):
+        if(self.enable == False):
+            return;
+
+        self.dropflow.x += delta;
+        if(self.dropflow.y < self.dropflow.x):
+            if(bRectinRect(rect4(self.pos.x-20, self.pos.y-20, self.pos.x+20, self.pos.y+20), self.target.location)):
+                self.enable = False;
+                self.target.AddItem(self.itemid);
+        
+        pass;
+    
+    def render(self, camera):
+        if(self.enable == False):
+            return;
+
+        loc = rect4(self.pos.x-20, self.pos.y-20, self.pos.x+20, self.pos.y+20);
+        fpos = camera.WorldPosToScreenPos(loc.getfpos())
+        lpos = camera.WorldPosToScreenPos(loc.getlpos())
+        ObjInScreenRt = rect4(fpos.x, fpos.y, lpos.x, lpos.y)
+        RootItem.sprlist[self.itemid].draw(ObjInScreenRt.getcenter().x, ObjInScreenRt.getcenter().y, ObjInScreenRt.getwid(), ObjInScreenRt.gethei());
+        pass;
 
 class ColidLayer:
     def __init__(self, name, priority) -> None:
@@ -427,7 +525,8 @@ class Part:
             vl2 = camera.WorldPosToScreenPos(vec2(loc.lx, loc.ly));
             loc = rect4(vf2.x, vf2.y, vl2.x, vl2.y);
 
-            self.sprite.draw(loc.fx, loc.fy, loc.getwid(), loc.gethei());
+            rate = math.pow(1 - (self.flowtime.x / self.flowtime.y), 3);
+            self.sprite.draw(loc.fx, loc.fy, loc.getwid()*rate, loc.gethei()*rate);
         pass
 
 class GameObject:
@@ -441,6 +540,7 @@ class GameObject:
         self.gm = gm
         self.visible = True;
         self.col = Collider() # location을 기준으로 하는 좌표계
+        self.enable = True;
     
     def update(self, deltaTime):
         return 0
@@ -479,6 +579,10 @@ class GameManager(Ptr):
 
         self.HitboxPool = [];
 
+        self.ProjectilePool = [];
+
+        self.RootItemPool = [];
+
         index = 0;
         while(index < self.partMax):
             self.partPool.append(Part(vec2(0, 0), vec2(0, 0), 0, 0, 0, 0));
@@ -487,6 +591,10 @@ class GameManager(Ptr):
         pass
 
     def AddPart(self, pos, dir, rad, gravity, maxtime, spr):
+        global MainCamera;
+        if(MainCamera.Rt.bPosInRect(pos) == False):
+            return;
+
         if(self.partup + 1 < self.partMax):
             part = Part(pos, dir, rad, gravity, maxtime, spr);
             self.partPool[self.partup] = part;
@@ -500,6 +608,16 @@ class GameManager(Ptr):
                     break;
                 pindex += 1;
         pass
+
+    def AddProjectile(self, startPos, dir, tag, damage):
+        pj = Projectile(startPos, dir, tag, damage, self);
+        self.ProjectilePool.append(pj);
+        pass;
+
+    def AddRootItem(self, pos, itemname, target):
+        ri = RootItem(pos, itemname, target);
+        self.RootItemPool.append(ri);
+        pass;
 
     def Update(self, deltaTime):
         poolLen = len(self.objPool)
@@ -519,6 +637,10 @@ class GameManager(Ptr):
         for obj in self.objPool:
             obj.update(deltaTime)
 
+            if(obj.enable == False):
+                self.objPool.remove(obj);
+                del obj;
+
         pindex = 0;
         while(pindex < self.partup):
             if(self.partPool[pindex].enable):
@@ -536,6 +658,24 @@ class GameManager(Ptr):
             if(hb.isHit):
                 self.HitboxPool.remove(hb);
                 del hb;
+        
+        for pj in self.ProjectilePool:
+            pj.hitbox.timeflow.x += deltaTime;
+            if(pj.hitbox.timeflow.x > pj.hitbox.timeflow.y):
+                pj.hitbox.isHit = True;
+            
+            pj.update(deltaTime);
+            
+            if(pj.hitbox.isHit):
+                self.ProjectilePool.remove(pj);
+                del pj;
+        
+        for ri in self.RootItemPool:
+            ri.update(deltaTime);
+            
+            if(ri.enable == False):
+                self.RootItemPool.remove(ri);
+                del ri;
         pass
 
     def AddObject(self, obj):
@@ -558,6 +698,11 @@ class GameManager(Ptr):
                 if(pindex == self.partup-1):
                     self.partup -= 1;
             pindex += 1;
+
+        
+        for ri in self.RootItemPool:
+            ri.render(camera);
+
         return 0
     
     def Event(self, event):

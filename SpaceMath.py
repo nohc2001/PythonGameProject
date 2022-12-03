@@ -38,6 +38,8 @@ class vec2:
             v2.y = 0
             return v2
 
+
+
 @dataclass(init=True)
 class straightLine:
     def __init__(self, pos0, pos1) -> None:
@@ -109,3 +111,6 @@ def copy_rect4(other):
 
 def get_distance(pos0, pos1):
     return math.sqrt(math.pow(pos1.x - pos0.x, 2) + math.pow(pos1.y - pos0.y, 2));
+
+def normalized(vec):
+    return vec2(vec.x / get_distance(vec2(0, 0), vec), vec.y / get_distance(vec2(0, 0), vec));

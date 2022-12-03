@@ -32,7 +32,7 @@ saveClock = 0
 presentClock = 0
 global bgm;
 bgm = 0;
-LevelEditMode = True;
+LevelEditMode = False;
 LevelEdit_PlayMode = False;
 moveflow = vec2(0, 1);
 rkey, lkey, ukey, dkey = False, False, False, False;
@@ -100,7 +100,7 @@ class GameColideData:
             
             TileImage.clip_draw(0, 0, int(xwid), int(ywid), int(ObjInScreenRt.fx + (ObjInScreenRt.getwid()//ts) * ts + xwid/2)-1, int(ObjInScreenRt.fy + (ObjInScreenRt.gethei()//ts) * ts + ywid/2)-1, xwid+2, ywid+2);
         
-        GameColideData.gradiant.draw(int(ObjInScreenRt.getcenter().x), int(ObjInScreenRt.getcenter().y), int(ObjInScreenRt.getwid())+4, int(ObjInScreenRt.gethei()+4));
+        #GameColideData.gradiant.draw(int(ObjInScreenRt.getcenter().x), int(ObjInScreenRt.getcenter().y), int(ObjInScreenRt.getwid())+4, int(ObjInScreenRt.gethei()+4));
         pass;
 
 class GameObjectData:
@@ -120,6 +120,12 @@ class GameObjectData:
     images.append(pico2d.load_image("Resorceses/Object/Weeds2.png"));
     images.append(pico2d.load_image("Resorceses/Object/Weeds3.png"));
     images.append(pico2d.load_image("Resorceses/Object/Weeds4.png"));
+    images.append(pico2d.load_image("Resorceses/Object/box.png"));
+    images.append(pico2d.load_image("Resorceses/Object/fence.png"));
+    images.append(pico2d.load_image("Resorceses/Object/flag.png"));
+    images.append(pico2d.load_image("Resorceses/Object/flag2.png"));
+    images.append(pico2d.load_image("Resorceses/Object/grassball.png"));
+    images.append(pico2d.load_image("Resorceses/Object/house0.png"));
 
     def __init__(self, rt, sindex, layer) -> None:
         self.sprindex = sindex;
@@ -143,6 +149,25 @@ class GameObjectData:
         GameObjectData.images[self.sprindex].draw(int(ObjInScreenRt.getcenter().x), int(ObjInScreenRt.getcenter().y), int(ObjInScreenRt.getwid()), int(ObjInScreenRt.gethei()));
         pass;
 
+class EnemyData:
+    efont = None;
+    def __init__(self, ID, rt) -> None:
+        if(EnemyData.efont == None):
+            EnemyData.efont = load_font('Resorceses/Font/OK CHAN.ttf', 20)
+        self.eid = ID;
+        self.RT = rt;
+        pass
+
+    def render(self, camera):
+        if(EnemyData.efont == None):
+            return;
+
+        fpos = camera.WorldPosToScreenPos(vec2(self.RT.fx, self.RT.fy));
+        lpos = camera.WorldPosToScreenPos(vec2(self.RT.lx, self.RT.ly));
+        ObjInScreenRt = rect4(fpos.x, fpos.y, lpos.x, lpos.y);
+        EnemyData.efont.draw(ObjInScreenRt.getcenter().x, ObjInScreenRt.getcenter().y, str(self.eid));
+        pass;
+
 def copy_GCD(GCD):
     gcd = GameColideData(GCD.RT);
     gcd.TileImageIndex = GCD.TileImageIndex;
@@ -153,15 +178,21 @@ def copy_GOD(GOD):
     return god;
 
 class EditData:
-    
+    portalImage = None;
     AddMode = 'ready';
     AddingGCD = GameColideData(rect4(0, 0, 0, 0));
     AddingGOD = GameObjectData(rect4(0, 0, 0, 0), 0, 0);
+    portalLocation = rect4(0, 0, 100, 100);
     addobjiscol = False;
+    addportal = False;
+    addmonster = False;
     addTargetLayer = 0;
     def __init__(self) -> None:
         self.GCDArr = [];
         self.GODArr = [];
+        self.EnemyArr = [];
+        if(EditData.portalImage == None):
+            EditData.portalImage = load_image("Resorceses/Portal.png");
         pass
 
     def AddColObj(self, gcd):
@@ -174,17 +205,33 @@ class EditData:
         pass;
     
     def Render(self, camera):
+        global LevelEdit_PlayMode
         index = 0;
-        EditData.AddingGCD.render(camera);
+        if(LevelEdit_PlayMode == False):
+            EditData.AddingGCD.render(camera);
+            EditData.AddingGOD.render(camera);
+
         while(index < len(self.GCDArr)):
             self.GCDArr[index].render(camera);
             index += 1;
         
         index = 0;
-        EditData.AddingGOD.render(camera);
+        
         while(index < len(self.GODArr)):
             self.GODArr[index].render(camera);
             index += 1;
+        
+        if(LevelEdit_PlayMode == False):
+            index = 0;
+            while(index < len(self.EnemyArr)):
+                self.EnemyArr[index].render(camera);
+                index += 1;
+        
+        
+        fpos = camera.WorldPosToScreenPos(vec2(EditData.portalLocation.fx, EditData.portalLocation.fy));
+        lpos = camera.WorldPosToScreenPos(vec2(EditData.portalLocation.lx, EditData.portalLocation.ly));
+        ObjInScreenRt = rect4(fpos.x, fpos.y, lpos.x, lpos.y);
+        EditData.portalImage.draw(ObjInScreenRt.getcenter().x, ObjInScreenRt.getcenter().y, ObjInScreenRt.getwid(), ObjInScreenRt.gethei());
         pass;
     
     def Update(self, delta):
@@ -296,7 +343,35 @@ class EditData:
                 else:
                     EditData.addobjiscol = True;
                     EditData.AddMode = 'ready';
+            if(event.key == SDLK_t):
+                if(EditData.addportal):
+                    EditData.addportal = False;
+                else:
+                    EditData.addportal = True;
+            
+            if(event.key == SDLK_m):
+                if(EditData.addmonster):
+                    EditData.addmonster = False;
+                else:
+                    EditData.addmonster = True;
 
+        if(EditData.addmonster):
+            if(event.type == SDL_MOUSEBUTTONDOWN):
+                pos = MainCamera.ScreenPosToWorldPos(vec2(event.x, event.y));
+                ed = EnemyData(0, rect4(pos.x, pos.y, pos.x + 200, pos.y + 240));
+                self.EnemyArr.append(ed);
+            if(event.type == SDL_KEYDOWN and event.key == SDLK_e):
+                self.EnemyArr[len(self.EnemyArr) - 1].eid += 1;
+            if(event.type == SDL_KEYDOWN and event.key == SDLK_q):
+                self.EnemyArr[len(self.EnemyArr) - 1].eid -= 1;
+            return;
+
+        if(EditData.addportal):
+            if(event.type == SDL_MOUSEBUTTONDOWN):
+                pos = MainCamera.ScreenPosToWorldPos(vec2(event.x, event.y));
+                EditData.portalLocation = rect4(pos.x, pos.y, pos.x + 100, pos.y + 100);
+            return;
+        
         if(EditData.addobjiscol):
             if(EditData.AddMode == 'ready'):
                 if(event.type == SDL_MOUSEBUTTONDOWN and event.button == SDL_BUTTON_LEFT):
@@ -328,6 +403,12 @@ class EditData:
 
     def SaveData(self):
         file = open("MapSaveFile.txt", 'w');
+
+        file.write(str(EditData.portalLocation.fx) + '\n');
+        file.write(str(EditData.portalLocation.fy) + '\n');
+        file.write(str(EditData.portalLocation.lx) + '\n');
+        file.write(str(EditData.portalLocation.ly) + '\n');
+
         file.write(str(len(self.GCDArr)) + '\n');
         index = 0;
         while(index < len(self.GCDArr)):
@@ -350,6 +431,17 @@ class EditData:
             file.write(str(ins.RT.lx) + '\n');
             file.write(str(ins.RT.ly) + '\n');
             index += 1;
+        
+        file.write(str(len(self.EnemyArr)) + '\n');
+        index = 0;
+        while(index < len(self.EnemyArr)):
+            ins = self.EnemyArr[index];
+            file.write(str(ins.eid) + '\n');
+            file.write(str(ins.RT.fx) + '\n');
+            file.write(str(ins.RT.fy) + '\n');
+            file.write(str(ins.RT.lx) + '\n');
+            file.write(str(ins.RT.ly) + '\n');
+            index += 1;
         pass;
 
     def LoadData(self, mapfileName):
@@ -365,7 +457,19 @@ class EditData:
             index += 1;
         self.GODArr.clear();
 
+        index = 0;
+        while(index < len(self.EnemyArr)):
+            del self.EnemyArr[index];
+            index += 1;
+        self.EnemyArr.clear();
+
         file = open(mapfileName, 'r');
+
+        EditData.portalLocation.fx = float(file.readline());
+        EditData.portalLocation.fy = float(file.readline());
+        EditData.portalLocation.lx = float(file.readline());
+        EditData.portalLocation.ly = float(file.readline());
+
         length = int(file.readline());
         index = 0;
         while(index < length):
@@ -389,6 +493,18 @@ class EditData:
             ins.RT.lx = float(file.readline());
             ins.RT.ly = float(file.readline());
             self.GODArr.append(ins);
+            index += 1;
+        
+        length = int(file.readline());
+        index = 0;
+        while(index < length):
+            ins = EnemyData(0, rect4(0, 0, 0, 0));
+            ins.eid = int(file.readline());
+            ins.RT.fx = float(file.readline());
+            ins.RT.fy = float(file.readline());
+            ins.RT.lx = float(file.readline());
+            ins.RT.ly = float(file.readline());
+            self.EnemyArr.append(ins);
             index += 1;
         pass;
 
@@ -415,7 +531,8 @@ def init():
     sprarr.append(load_image('Resorceses/SpriteSheet/Goblin/goblin_walk.png')) #14
     sprarr.append(load_image('Resorceses/SpriteSheet/Goblin/goblin_attack.png')) #15
 
-    fontObj.append(load_font('Resorceses/Font/OK CHAN.ttf')); #1
+
+    
 
     if(LevelEditMode):
         return;
@@ -423,7 +540,7 @@ def init():
     bgm = load_music('Resorceses\Sound\EnterToMagica0.mp3');
     bgm.set_volume(128);
     
-    playerobj = Player(rect4(0, 0, 200, 240), 101, sprarr[2], sprarr[3], sprarr[16], game_manager)
+    playerobj = Player(rect4(0, 0, 200, 240), 101, sprarr[3], game_manager)
     playerobj.col.colRT = playerobj.location;
     game_manager.colManager.AddLayer("Player", 20);
     game_manager.colManager.AddObjToCollidLayer("Player", playerobj);
@@ -473,7 +590,7 @@ def init():
     return 0
 
 def editplayinit():
-    global sprarr, game_manager, bgm, LevelEditMode, playerobj;
+    global sprarr, game_manager, bgm, LevelEditMode;
     #sprite init
 
     index = 0;
@@ -487,6 +604,27 @@ def editplayinit():
         del game_manager.colManager.Layers[index];
         index += 1;
     game_manager.colManager.Layers.clear();
+
+    index = 0;
+    while(index < len(game_manager.HitboxPool)):
+        del game_manager.HitboxPool[index];
+        index += 1;
+    game_manager.HitboxPool.clear();
+
+    index = 0;
+    while(index < len(game_manager.ProjectilePool)):
+        del game_manager.ProjectilePool[index];
+        index += 1;
+    game_manager.ProjectilePool.clear();
+
+    index = 0;
+    while(index < len(game_manager.RootItemPool)):
+        del game_manager.RootItemPool[index];
+        index += 1;
+    game_manager.RootItemPool.clear();
+
+    del game_manager;
+    game_manager = GameManager();
 
     index = 0;
     while(index < len(sprarr)):
@@ -512,26 +650,28 @@ def editplayinit():
     sprarr.append(load_image('Resorceses/Particles/p_fire10.png')) #10
     sprarr.append(load_image('Resorceses/Particles/p_fire11.png')) #11
     sprarr.append(load_image('Resorceses/Particles/p_fire20.png')) #12
-    sprarr.append(load_image('Resorceses/SpriteSheet/Goblin/goblin_idle.png')) #13
-    sprarr.append(load_image('Resorceses/SpriteSheet/Goblin/goblin_walk.png')) #14
-    sprarr.append(load_image('Resorceses/SpriteSheet/Goblin/goblin_attack.png')) #15
-    sprarr.append(load_image('Resorceses/SpriteSheet/Player/player_attack.png')) #16
-    fontObj.append(load_font('Resorceses/Font/OK CHAN.ttf')); #1
+    sprarr.append(load_image('Resorceses/SpriteSheet/Player/player_attack.png')) #13
+
+    fontObj.append(load_font('Resorceses/Font/OK CHAN.ttf', 20)); #1
 
     bgm = load_music('Resorceses\Sound\EnterToMagica0.mp3');
     bgm.set_volume(128);
 
-    playerobj = Player(rect4(0, 0, 200, 240), 101, sprarr[2], sprarr[3], sprarr[16], game_manager)
+    playerobj = Player(rect4(0, 0, 200, 240), 101, sprarr[3], game_manager)
     playerobj.col.colRT = playerobj.location;
+    Player.portalLocation = editdata.portalLocation;
     game_manager.colManager.AddLayer("Player", 20);
     game_manager.colManager.AddObjToCollidLayer("Player", playerobj);
-
-    monster = Monster(rect4(400, 0, 600, 240), 101, sprarr[14], sprarr[13], sprarr[15], game_manager, playerobj);
-    playerobj.col.colRT = monster.location;
-    game_manager.colManager.AddObjToCollidLayer("Player", monster);
-
     game_manager.AddObject(playerobj)
-    game_manager.AddObject(monster)
+
+    index = 0;
+    monsteridtostr = ['goblin', 'thief', 'blackmage', 'nefendus', 'noul'];
+    while(index < len(editdata.EnemyArr)):
+        rt = editdata.EnemyArr[index].RT;
+        monster = Monster(rt, 101, monsteridtostr[editdata.EnemyArr[index].eid], game_manager, playerobj);
+        game_manager.colManager.AddObjToCollidLayer("Player", monster);
+        game_manager.AddObject(monster)
+        index += 1;
 
     game_manager.colManager.AddLayer("Box", 10);
     index = 0;
@@ -543,6 +683,13 @@ def editplayinit():
         floor.visible = False;
         game_manager.colManager.AddObjToCollidLayer("Box", floor);
         index += 1;
+    
+    '''
+    masklight = MaskyLight(-10000000, sprarr[7], game_manager, 50, 35, MainCamera);
+    masklight.AddLightData(LightData(vec2(0, 0), 200, vec2(500, 500), 10));
+    masklight.AddLightData(LightData(vec2(600, 0), 200, vec2(500, 500), 10));
+    game_manager.AddObject(masklight);
+    '''
 
     game_manager.colManager.AddRelation("Player", "Box");
 
@@ -551,14 +698,33 @@ def editplayinit():
 
 background = load_image('Resorceses/SKY0.png');
 
+mapstrArr = ['MapSaveFile0.txt', 'MapSaveFile1.txt', 'MapSaveFile2.txt', 'MapSaveFile3.txt', 'MapSaveFile4.txt'];
+mapid = 0;
+
+def mapload():
+    global mapstrArr, mapid, LevelEdit_PlayMode;
+    editdata.LoadData('MapData/' + mapstrArr[mapid]);
+    editplayinit();
+    LevelEdit_PlayMode = True;
+    pass;
+
 def main():
-    init()
+    fontObj.append(load_font('Resorceses/Font/OK CHAN.ttf')); #1
     global isRunning, game_manager, saveClock, presentClock, MainCamera, LevelEditMode, LevelEdit_PlayMode, editSelectIndex
-    global rkey, lkey, ukey, dkey, isSelected, ctrlkey;
+    global rkey, lkey, ukey, dkey, isSelected, ctrlkey, mapid;
 
     if(LevelEditMode == False):
         saveClock = pico2d.get_time()
+        mapload();
+        LevelEdit_PlayMode = True;
         while(1):
+            if(Player.mapchange):
+                #go next level
+                mapid += 1;
+                if(mapid < 4):
+                    mapload();
+                Player.mapchange = False;
+                
             if(isRunning == False):
                 return 0
             
@@ -570,8 +736,14 @@ def main():
 
             clear_canvas()
 
+            background.draw(WMAX/2, HMAX/2, WMAX, HMAX);
+            editdata.Render(MainCamera);
             game_manager.Render(MainCamera)
             #fontObj[0].draw(500, 500, '마법 입문', (0, 0, 0));
+
+            if(mapid > 5):
+                fontObj[0].draw(400, 300, 'Game Clear!!');
+
             update_canvas()
 
             events = get_events()
@@ -583,6 +755,13 @@ def main():
     else:
         saveClock = pico2d.get_time()
         while(1):
+            if(Player.mapchange):
+                #go next level
+                mapid += 1;
+
+                mapload();
+                Player.mapchange = False;
+
             if(isRunning == False):
                 return 0
         
@@ -601,7 +780,8 @@ def main():
             if(LevelEdit_PlayMode):
                 game_manager.Render(MainCamera);
             
-            fontObj[0].draw(0, 100, 'col : ' + str(editdata.addobjiscol) + ' mode : ' + editdata.AddMode + ' Selection : ' + str(editSelectIndex) + ' Layer : ' + str(EditData.addTargetLayer), (0, 0, 0));
+            if(LevelEdit_PlayMode == False):
+                fontObj[0].draw(0, 100, 'col : ' + str(editdata.addobjiscol) + ' addmon : ' + str(editdata.addmonster) + ' mode : ' + editdata.AddMode + ' Selection : ' + str(editSelectIndex) + ' Layer : ' + str(EditData.addTargetLayer), (0, 0, 0));
             update_canvas()
 
             moveflow.x += deltaTime;
