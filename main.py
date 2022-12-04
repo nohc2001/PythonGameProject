@@ -1,14 +1,14 @@
 import os
 from pico2d import *
-from Objects.Particles import *
+from Particles import *
 from gameObj import *
-from Objects.Player import *
-from Objects.MaskyLight import*
-from Objects.Monster import*
+from Player import *
+from MaskyLight import*
+from Monster import*
 
-os.chdir('C:\\Users\\nohc2\\Dev\\PythonGame\\PythonGameProject')
+os.chdir(os.getcwd())
 pico2d.open_canvas(WMAX, HMAX)
-sys.path.append(r'C:\\Users\\nohc2\\Dev\\PythonGame\\PythonGameProject')
+#sys.path.append(os.getcwd())
 
 global isRunning
 isRunning = True
@@ -42,12 +42,12 @@ editSelectIndex = 0;
 isSelected = False;
 
 class GameColideData:
-    image = pico2d.load_image("Resorceses/GCD.png");
-    gradiant = pico2d.load_image("Resorceses/Tile/blocked.png");
-    selectedImage = pico2d.load_image("Resorceses/GCDSelected.png");
+    image = pico2d.load_image("./Resorceses/GCD.png");
+    gradiant = pico2d.load_image("./Resorceses/Tile/blocked.png");
+    selectedImage = pico2d.load_image("./Resorceses/GCDSelected.png");
     tileImages = [];
-    tileImages.append(pico2d.load_image("Resorceses/Tile/Tile0.png"));
-    tileImages.append(pico2d.load_image("Resorceses/Tile/WoodFloor.png"));
+    tileImages.append(pico2d.load_image("./Resorceses/Tile/Tile0.png"));
+    tileImages.append(pico2d.load_image("./Resorceses/Tile/WoodFloor.png"));
     tileSiz = 100;
     def __init__(self, rt):
         self.RT = rt;
@@ -105,27 +105,27 @@ class GameColideData:
 
 class GameObjectData:
     images = [];
-    images.append(pico2d.load_image("Resorceses/Object/Grass0.png"));
-    images.append(pico2d.load_image("Resorceses/Object/Grass1.png"));
-    images.append(pico2d.load_image("Resorceses/Object/Grass2.png"));
-    images.append(pico2d.load_image("Resorceses/Object/Grass3.png"));
-    images.append(pico2d.load_image("Resorceses/Object/Grass4.png"));
-    images.append(pico2d.load_image("Resorceses/Object/Tree0.png"));
-    images.append(pico2d.load_image("Resorceses/Object/Tree1.png"));
-    images.append(pico2d.load_image("Resorceses/Object/Tree2.png"));
-    images.append(pico2d.load_image("Resorceses/Object/Tree3.png"));
-    images.append(pico2d.load_image("Resorceses/Object/Tree4.png"));
-    images.append(pico2d.load_image("Resorceses/Object/Weeds0.png"));
-    images.append(pico2d.load_image("Resorceses/Object/Weeds1.png"));
-    images.append(pico2d.load_image("Resorceses/Object/Weeds2.png"));
-    images.append(pico2d.load_image("Resorceses/Object/Weeds3.png"));
-    images.append(pico2d.load_image("Resorceses/Object/Weeds4.png"));
-    images.append(pico2d.load_image("Resorceses/Object/box.png"));
-    images.append(pico2d.load_image("Resorceses/Object/fence.png"));
-    images.append(pico2d.load_image("Resorceses/Object/flag.png"));
-    images.append(pico2d.load_image("Resorceses/Object/flag2.png"));
-    images.append(pico2d.load_image("Resorceses/Object/grassball.png"));
-    images.append(pico2d.load_image("Resorceses/Object/house0.png"));
+    images.append(pico2d.load_image("./Resorceses/Object/Grass0.png"));
+    images.append(pico2d.load_image("./Resorceses/Object/Grass1.png"));
+    images.append(pico2d.load_image("./Resorceses/Object/Grass2.png"));
+    images.append(pico2d.load_image("./Resorceses/Object/Grass3.png"));
+    images.append(pico2d.load_image("./Resorceses/Object/Grass4.png"));
+    images.append(pico2d.load_image("./Resorceses/Object/Tree0.png"));
+    images.append(pico2d.load_image("./Resorceses/Object/Tree1.png"));
+    images.append(pico2d.load_image("./Resorceses/Object/Tree2.png"));
+    images.append(pico2d.load_image("./Resorceses/Object/Tree3.png"));
+    images.append(pico2d.load_image("./Resorceses/Object/Tree4.png"));
+    images.append(pico2d.load_image("./Resorceses/Object/Weeds0.png"));
+    images.append(pico2d.load_image("./Resorceses/Object/Weeds1.png"));
+    images.append(pico2d.load_image("./Resorceses/Object/Weeds2.png"));
+    images.append(pico2d.load_image("./Resorceses/Object/Weeds3.png"));
+    images.append(pico2d.load_image("./Resorceses/Object/Weeds4.png"));
+    images.append(pico2d.load_image("./Resorceses/Object/box.png"));
+    images.append(pico2d.load_image("./Resorceses/Object/fence.png"));
+    images.append(pico2d.load_image("./Resorceses/Object/flag.png"));
+    images.append(pico2d.load_image("./Resorceses/Object/flag2.png"));
+    images.append(pico2d.load_image("./Resorceses/Object/grassball.png"));
+    images.append(pico2d.load_image("./Resorceses/Object/house0.png"));
 
     def __init__(self, rt, sindex, layer) -> None:
         self.sprindex = sindex;
@@ -192,7 +192,7 @@ class EditData:
         self.GODArr = [];
         self.EnemyArr = [];
         if(EditData.portalImage == None):
-            EditData.portalImage = load_image("Resorceses/Portal.png");
+            EditData.portalImage = load_image("./Resorceses/Portal.png");
         pass
 
     def AddColObj(self, gcd):
@@ -514,22 +514,22 @@ def init():
     global sprarr, game_manager, bgm, LevelEditMode;
 
     #sprite init
-    sprarr.append(load_image('tica.png')) #0
-    sprarr.append(load_image('table_value_2.png')) #1
-    sprarr.append(load_image('Resorceses/char_walk.png')) #2
-    sprarr.append(load_image('Resorceses/char_idle.png')) #3
-    sprarr.append(load_image('Resorceses/Tree0.png')) #4
-    sprarr.append(load_image('Resorceses/Grass0.png')) #5
-    sprarr.append(load_image('Resorceses/Flower0.png')) #6
-    sprarr.append(load_image('Resorceses/dark.png')) #7
-    sprarr.append(load_image('Resorceses/Particles/p_fire00.png')) #8
-    sprarr.append(load_image('Resorceses/Particles/p_fire01.png')) #9
-    sprarr.append(load_image('Resorceses/Particles/p_fire10.png')) #10
-    sprarr.append(load_image('Resorceses/Particles/p_fire11.png')) #11
-    sprarr.append(load_image('Resorceses/Particles/p_fire20.png')) #12
-    sprarr.append(load_image('Resorceses/SpriteSheet/Goblin/goblin_idle.png')) #13
-    sprarr.append(load_image('Resorceses/SpriteSheet/Goblin/goblin_walk.png')) #14
-    sprarr.append(load_image('Resorceses/SpriteSheet/Goblin/goblin_attack.png')) #15
+    sprarr.append(load_image('./tica.png')) #0
+    sprarr.append(load_image('./table_value_2.png')) #1
+    sprarr.append(load_image('./Resorceses/char_walk.png')) #2
+    sprarr.append(load_image('./Resorceses/char_idle.png')) #3
+    sprarr.append(load_image('./Resorceses/Tree0.png')) #4
+    sprarr.append(load_image('./Resorceses/Grass0.png')) #5
+    sprarr.append(load_image('./Resorceses/Flower0.png')) #6
+    sprarr.append(load_image('./Resorceses/dark.png')) #7
+    sprarr.append(load_image('./Resorceses/Particles/p_fire00.png')) #8
+    sprarr.append(load_image('./Resorceses/Particles/p_fire01.png')) #9
+    sprarr.append(load_image('./Resorceses/Particles/p_fire10.png')) #10
+    sprarr.append(load_image('./Resorceses/Particles/p_fire11.png')) #11
+    sprarr.append(load_image('./Resorceses/Particles/p_fire20.png')) #12
+    sprarr.append(load_image('./Resorceses/SpriteSheet/Goblin/goblin_idle.png')) #13
+    sprarr.append(load_image('./Resorceses/SpriteSheet/Goblin/goblin_walk.png')) #14
+    sprarr.append(load_image('./Resorceses/SpriteSheet/Goblin/goblin_attack.png')) #15
 
 
     
@@ -634,27 +634,27 @@ def editplayinit():
 
     del bgm;
 
-    GameObject.HPBAR_image = pico2d.load_image('Resorceses/HPBAR_BAR.png');
-    GameObject.HP_image = pico2d.load_image('Resorceses/HPBAR_HP.png');
+    GameObject.HPBAR_image = pico2d.load_image('./Resorceses/HPBAR_BAR.png');
+    GameObject.HP_image = pico2d.load_image('./Resorceses/HPBAR_HP.png');
 
-    sprarr.append(load_image('tica.png')) #0
-    sprarr.append(load_image('table_value_2.png')) #1
-    sprarr.append(load_image('Resorceses/char_walk.png')) #2
-    sprarr.append(load_image('Resorceses/char_idle.png')) #3
-    sprarr.append(load_image('Resorceses/Tree0.png')) #4
-    sprarr.append(load_image('Resorceses/Grass0.png')) #5
-    sprarr.append(load_image('Resorceses/Flower0.png')) #6
-    sprarr.append(load_image('Resorceses/dark.png')) #7
-    sprarr.append(load_image('Resorceses/Particles/p_fire00.png')) #8
-    sprarr.append(load_image('Resorceses/Particles/p_fire01.png')) #9
-    sprarr.append(load_image('Resorceses/Particles/p_fire10.png')) #10
-    sprarr.append(load_image('Resorceses/Particles/p_fire11.png')) #11
-    sprarr.append(load_image('Resorceses/Particles/p_fire20.png')) #12
-    sprarr.append(load_image('Resorceses/SpriteSheet/Player/player_attack.png')) #13
+    sprarr.append(load_image('./tica.png')) #0
+    sprarr.append(load_image('./table_value_2.png')) #1
+    sprarr.append(load_image('./Resorceses/char_walk.png')) #2
+    sprarr.append(load_image('./Resorceses/char_idle.png')) #3
+    sprarr.append(load_image('./Resorceses/Tree0.png')) #4
+    sprarr.append(load_image('./Resorceses/Grass0.png')) #5
+    sprarr.append(load_image('./Resorceses/Flower0.png')) #6
+    sprarr.append(load_image('./Resorceses/dark.png')) #7
+    sprarr.append(load_image('./Resorceses/Particles/p_fire00.png')) #8
+    sprarr.append(load_image('./Resorceses/Particles/p_fire01.png')) #9
+    sprarr.append(load_image('./Resorceses/Particles/p_fire10.png')) #10
+    sprarr.append(load_image('./Resorceses/Particles/p_fire11.png')) #11
+    sprarr.append(load_image('./Resorceses/Particles/p_fire20.png')) #12
+    sprarr.append(load_image('./Resorceses/SpriteSheet/Player/player_attack.png')) #13
 
-    fontObj.append(load_font('Resorceses/Font/OK CHAN.ttf', 20)); #1
+    fontObj.append(load_font('./Resorceses/Font/OK CHAN.ttf', 20)); #1
 
-    bgm = load_music('Resorceses\Sound\EnterToMagica0.mp3');
+    bgm = load_music('./Resorceses/Sound/EnterToMagica0.mp3');
     bgm.set_volume(128);
 
     playerobj = Player(rect4(0, 0, 200, 240), 101, sprarr[3], game_manager)
@@ -696,7 +696,7 @@ def editplayinit():
     bgm.repeat_play();
     pass;
 
-background = load_image('Resorceses/SKY0.png');
+background = load_image('./Resorceses/SKY0.png');
 
 mapstrArr = ['MapSaveFile0.txt', 'MapSaveFile1.txt', 'MapSaveFile2.txt', 'MapSaveFile3.txt', 'MapSaveFile4.txt'];
 mapid = 0;

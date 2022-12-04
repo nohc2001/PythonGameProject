@@ -46,15 +46,15 @@ class Projectile:
     def __init__(self, startPos, dir, tag, damage, gm) -> None:
         if(Projectile.sprlist == None):
             Projectile.sprlist = [];
-            Projectile.sprlist.append(load_image('Resorceses/Particles/arcane.png')); #0
-            Projectile.sprlist.append(load_image('Resorceses/Particles/p_fire00.png')); #1
-            Projectile.sprlist.append(load_image('Resorceses/Particles/p_fire01.png')); #2
-            Projectile.sprlist.append(load_image('Resorceses/Particles/p_fire10.png')); #3
-            Projectile.sprlist.append(load_image('Resorceses/Particles/p_fire11.png')); #4
-            Projectile.sprlist.append(load_image('Resorceses/Particles/p_fire20.png')); #5
-            Projectile.sprlist.append(load_image('Resorceses/Particles/ice0.png')); #6
-            Projectile.sprlist.append(load_image('Resorceses/Particles/ice1.png')); #7
-            Projectile.sprlist.append(load_image('Resorceses/Particles/ice2.png')); #8
+            Projectile.sprlist.append(load_image('./Resorceses/Particles/arcane.png')); #0
+            Projectile.sprlist.append(load_image('./Resorceses/Particles/p_fire00.png')); #1
+            Projectile.sprlist.append(load_image('./Resorceses/Particles/p_fire01.png')); #2
+            Projectile.sprlist.append(load_image('./Resorceses/Particles/p_fire10.png')); #3
+            Projectile.sprlist.append(load_image('./Resorceses/Particles/p_fire11.png')); #4
+            Projectile.sprlist.append(load_image('./Resorceses/Particles/p_fire20.png')); #5
+            Projectile.sprlist.append(load_image('./Resorceses/Particles/ice0.png')); #6
+            Projectile.sprlist.append(load_image('./Resorceses/Particles/ice1.png')); #7
+            Projectile.sprlist.append(load_image('./Resorceses/Particles/ice2.png')); #8
             #Projectile.sprlist.append(load_image('Resorceses/Particles/p_fire00.png')); #9
             #Projectile.sprlist.append(load_image('Resorceses/Particles/p_fire00.png')); #10
             #Projectile.sprlist.append(load_image('Resorceses/Particles/p_fire00.png')); #11
@@ -96,8 +96,8 @@ class RootItem:
     def __init__(self, pos, itemname, target) -> None:
         if(RootItem.sprlist == None):
             RootItem.sprlist = [];
-            RootItem.sprlist.append(load_image('Resorceses/ItemIcon/gold.png'));
-            RootItem.sprlist.append(load_image('Resorceses/ItemIcon/HealthPotion.png'));
+            RootItem.sprlist.append(load_image('./Resorceses/ItemIcon/gold.png'));
+            RootItem.sprlist.append(load_image('./Resorceses/ItemIcon/HealthPotion.png'));
         
         # 플레이어 오브젝트가 들어감
 
@@ -405,10 +405,10 @@ class ColidLayer:
             rt2m = obj2.col.colRT;
 
             if(bRectinRect(rt1m, rt2m) == False):
-                print("col : false");
+                #print("col : false");
                 return False;
             else:
-                print("col : true");
+                #print("col : true");
                 rt1m = copy_rect4(obj1.col.colRT);
                 rt1m.Move(vec2(obj1.col.velocity.x, 0));
                 if(bRectinRect(rt1m, rt2m) == False):
